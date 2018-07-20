@@ -1,11 +1,5 @@
 #!/usr/bin/env python
-try:
-    from setuptools import setup, find_packages
-except ImportError:
-    from ez_setup import use_setuptools
-    use_setuptools()
-    from setuptools import setup, find_packages
-
+from setuptools import setup, find_packages
 from distutils.core import setup, Extension
 import numpy
 
@@ -16,9 +10,10 @@ setup(name = "enaml_nodegraph",
       author = "Ulrich Eck",
       author_email = "ulrich.eck@tum.de",
       url = "https://github.com/ulricheck/enaml_nodegraph",
-      packages = find_packages('.'),
+      packages = find_packages(exclude=['tests', 'tests.*']),
       package_data = {'enaml_nodegraph' : ['views/*.enaml']},
       license = "BSD License",
+      install_requires=['setuptools'],
       requires=[
         'atom',
         'enaml',

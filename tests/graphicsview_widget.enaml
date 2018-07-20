@@ -1,0 +1,100 @@
+from enaml_nodegraph import install
+install()
+
+from enaml.widgets.api import MainWindow, Container, Field
+from enaml.layout.api import vbox, hbox, align, spacer, grid
+
+from enaml.widgets.ipython_console import IPythonConsole
+
+from enaml_nodegraph.widgets.graphicsview import GraphicsView
+from enaml_nodegraph.widgets.node_graphicsscene import NodeGraphicsScene
+from enaml_nodegraph.widgets.node_item import NodeItem
+from enaml_nodegraph.widgets.node_content import NodeContent
+from enaml_nodegraph.widgets.node_socket import NodeSocket, SocketPosition, SocketType
+
+enamldef Main(MainWindow):
+
+    title = 'Nodegraph Test'
+
+    Container: ngwin1:
+        constraints = [
+            hbox(view1, console)
+        ]
+
+        GraphicsView: view1:
+            minimum_size = (640, 640)
+            NodeGraphicsScene: scene:
+                background = "#393939"
+                color_light = "#2f2f2f"
+                color_dark = "#292929"
+
+                NodeItem: n1:
+                    name = "test node1"
+                    color_default = "#0000007F"
+                    color_selected = "#FFA637FF"
+                    color_title = "#AAAAAAFF"
+                    color_title_background = "#313131FF"
+                    color_background = "#212121E3"
+                    NodeSocket:
+                        index = 0
+                        socket_type = SocketType.INPUT
+                        socket_position = SocketPosition.LEFT_TOP
+                    NodeSocket:
+                        index = 1
+                        socket_type = SocketType.INPUT
+                        socket_position = SocketPosition.LEFT_TOP
+
+                    NodeSocket:
+                        index = 0
+                        socket_type = SocketType.OUTPUT
+                        socket_position = SocketPosition.RIGHT_BOTTOM
+                    NodeSocket:
+                        index = 1
+                        socket_type = SocketType.OUTPUT
+                        socket_position = SocketPosition.RIGHT_BOTTOM
+
+                    NodeContent:
+                        Container:
+                            padding = (0, 0, 0, 0)
+                            Field:
+                                text = "123"
+
+                NodeItem: n2:
+                    name = "test node2"
+                    color_default = "#0000007F"
+                    color_selected = "#FFA637FF"
+                    color_title = "#AAAAAAFF"
+                    color_title_background = "#313131FF"
+                    color_background = "#212121E3"
+                    NodeSocket:
+                        index = 0
+                        socket_type = SocketType.INPUT
+                        socket_position = SocketPosition.LEFT_BOTTOM
+                    NodeSocket:
+                        index = 1
+                        socket_type = SocketType.INPUT
+                        socket_position = SocketPosition.LEFT_BOTTOM
+
+                    NodeSocket:
+                        index = 0
+                        socket_type = SocketType.OUTPUT
+                        socket_position = SocketPosition.RIGHT_TOP
+                    NodeSocket:
+                        index = 1
+                        socket_type = SocketType.OUTPUT
+                        socket_position = SocketPosition.RIGHT_TOP
+
+                    NodeContent:
+                        Container:
+                            padding = (0, 0, 0, 0)
+                            Field:
+                                text = "234"
+
+        Container: console:
+            padding = (0, 0, 0, 0)
+            alias ipy
+            constraints = [vbox(ipy, spacing=3)]
+
+            IPythonConsole: ipy:
+                minimum_size = (400,200)
+                initial_ns = {"view": view1, "scene": scene}

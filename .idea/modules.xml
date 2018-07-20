@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../atom/.idea/atom.iml" filepath="$PROJECT_DIR$/../atom/.idea/atom.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../enaml/.idea/enaml.iml" filepath="$PROJECT_DIR$/../enaml/.idea/enaml.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/enaml_nodegraph.iml" filepath="$PROJECT_DIR$/.idea/enaml_nodegraph.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../enaml_opengl/.idea/enaml_opengl.iml" filepath="$PROJECT_DIR$/../enaml_opengl/.idea/enaml_opengl.iml" />
+      <module fileurl="file://$USER_HOME$/mysandbox/explore/pyqt-node-editor-tutorials/.idea/pyqt-node-editor-tutorials.iml" filepath="$USER_HOME$/mysandbox/explore/pyqt-node-editor-tutorials/.idea/pyqt-node-editor-tutorials.iml" />
+    </modules>
+  </component>
+</project>

@@ -1,0 +1,102 @@
+from enaml_nodegraph import install
+install()
+
+from enaml.widgets.api import MainWindow, Container, Field
+
+from enaml_nodegraph.widgets.node_item import NodeItem
+from enaml_nodegraph.widgets.edge_item import EdgeItem
+from enaml_nodegraph.model import Node, Edge, Socket
+
+
+def make_graph():
+    n1 = Node(name="node1",
+              inputs=[Socket(name="in1", data_type="a"), Socket(name="in2", data_type="a")],
+              outputs=[Socket(name="out1", degree=1, data_type="a"), Socket(name="out2", data_type="a")],
+              )
+    n2 = Node(name="node2",
+              inputs=[Socket(name="in1", data_type="a"), Socket(name="in2", data_type="a")],
+              outputs=[Socket(name="out1", data_type="a"), Socket(name="out2", data_type="b")],
+              )
+
+    e1 = Edge(start_socket=n1.outputs[0], end_socket=n2.inputs[0])
+    e2 = Edge(start_socket=n1.outputs[1], end_socket=n2.inputs[0])
+    e3 = Edge(start_socket=n2.outputs[0], end_socket=n1.inputs[1])
+
+    g = Graph(name="test graph",
+              nodes=[n1,n2],
+              edges=[e1,e2,e3],
+              )
+    return g
+
+
+template PlainNode(NodeData):
+    NodeItem:
+        alias node_item
+        NodeData:
+            alias node_data
+        Container:
+            Field:
+                text << node_data.name
+
+template PlainEdge(EdgeData):
+    EdgeItem:
+        alias edge_item
+        EdgeData:
+            alias edge_data
+
+
+
+enamldef TestNodeGraph(NodeGraphModel):
+    Node: node1:
+    	name = "node1"
+        InputSocket: in1:
+            name = "in1"
+        OutputSocket: out1:
+            name = "out1"
+        OutputSocket: out2:
+            name = "out2"
+
+
+    Node: node2:
+    	name = "node2"
+        InputSocket: in1:
+            name = "in1"
+        OutputSocket: out1:
+            name = "iut1"
+        OutputSocket: out2:
+            name = "out2"
+
+
+    Node: node3:
+    	name = "node3"
+        InputSocket: in1:
+            name = "in1"
+        OutputSocket: out1:
+            name = "iut1"
+        OutputSocket: out2:
+            name = "out2"
+
+    Edge: edge1:
+        source_node = "node1"
+        source_socket = "out1"
+        target_node = "node2"
+        target_socket = "in1"
+
+    Edge: edge2:
+        source_node = "node2"
+        source_socket = "out2"
+        target_node = "node3"
+        target_socket = "in1"
+
+
+enamldef Main(MainWindow):
+
+    title = 'Nodegraph Test'
+
+    Container: ngwin1:
+        minimum_size = (800, 600)
+
+	    NodeGraphEditor: scene1:
+	        TestNodeGraph: model:
+	            pass
+
