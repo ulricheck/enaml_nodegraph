@@ -106,11 +106,13 @@ class QtNodeGraphicsScene(QtGraphicsScene, ProxyNodeGraphicsScene):
                 lines_dark.append(QtCore.QLine(left, y, right, y))
 
         # draw the lines
-        painter.setPen(self.pen_light)
-        painter.drawLines(*lines_light)
+        if lines_light:
+            painter.setPen(self.pen_light)
+            painter.drawLines(*lines_light)
 
-        painter.setPen(self.pen_dark)
-        painter.drawLines(*lines_dark)
+        if lines_dark:
+            painter.setPen(self.pen_dark)
+            painter.drawLines(*lines_dark)
 
 
     #--------------------------------------------------------------------------

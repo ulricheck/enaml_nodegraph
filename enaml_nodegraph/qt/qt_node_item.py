@@ -8,6 +8,7 @@ from enaml.qt.q_resource_helpers import (
 
 from enaml_nodegraph.widgets.node_item import ProxyNodeItem
 from enaml_nodegraph.widgets.node_content import NodeContent
+from enaml_nodegraph.primitives import Point2D
 
 from .qt_graphicsitem import QGraphicsItem, QtGraphicsItem
 from .qt_node_content import QtNodeContent
@@ -31,6 +32,13 @@ class QNodeItem(QGraphicsItem):
             float(self.proxy.width),
             float(self.proxy.height)
         ).normalized()
+
+    def mouseMoveEvent(self, event):
+        super().mouseMoveEvent(event)
+        self.proxy.position = Point2D(x=self.x(), y=self.y())
+
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
 
     # @todo: these are expected from toolkitobject - but are not valid for graphics items
     def setObjectName(self, name):
@@ -62,6 +70,8 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
     color_background = Typed(QtGui.QColor)
 
     content = Instance(QtNodeContent)
+
+    position = Typed(Point2D)
 
     #: A reference to the widget created by the proxy.
     widget = Typed(QNodeItem)
@@ -99,6 +109,7 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
 
         self.widget.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable)
         self.widget.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable)
+        self.position = Point2D(x=self.widget.x(), y=self.widget.y())
 
     def activate_bottom_up(self):
         """ Activate the proxy tree for the bottom-up pass.
@@ -116,6 +127,9 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
         if change['name'] == 'padding':
             self.widget.title_item.setPos(self.padding, 0)
         self.widget.title_item.setTextWidth(self.width - 2 * self.padding)
+
+    def _observe_position(self, change):
+        print(change['value'])
 
     #--------------------------------------------------------------------------
     # Private API

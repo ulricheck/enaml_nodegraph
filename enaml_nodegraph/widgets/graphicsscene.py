@@ -53,6 +53,13 @@ class ProxyGraphicsScene(ProxyToolkitObject):
         raise NotImplementedError
 
 
+class SceneGuard(IntEnum):
+    NOOP = 0x01
+    INITIALIZING = 0x02
+    ACTIVATING = 0x04
+
+
+
 class Feature(IntEnum):
     """ An IntEnum defining the advanced GraphicsScene features.
 
@@ -105,6 +112,8 @@ class GraphicsScene(ToolkitObject, Stylable):
     #: this value are ignored.
     features = d_(Coerced(Feature.Flags))
 
+    guard = d_(Coerced(SceneGuard.Flags))
+
     #: A reference to the ProxyGraphicsScene object.
     proxy = Typed(ProxyGraphicsScene)
 
@@ -114,18 +123,22 @@ class GraphicsScene(ToolkitObject, Stylable):
 
     def child_added(self, child):
         """ Reset the item cache when a child is added """
+        self.guard = SceneGuard.INITIALIZING
+        if isinstance(child, GraphicsItem):
+            self.add_item(child)
         super(GraphicsScene, self).child_added(child)
         self.get_member('_items').reset(self)
+        self.guard = SceneGuard.NOOP
 
     def child_removed(self, child):
         """ Reset the item cache when a child is removed """
+        self.guard = SceneGuard.INITIALIZING
         super(GraphicsScene, self).child_removed(child)
         self.get_member('_items').reset(self)
+        self.guard = SceneGuard.NOOP
 
     def activate_top_down(self):
         super(GraphicsScene, self).activate_top_down()
-        for item in self._items:
-            self.add_item(item)
 
     #--------------------------------------------------------------------------
     # Observers
@@ -144,7 +157,7 @@ class GraphicsScene(ToolkitObject, Stylable):
         self.proxy.update()
 
     def _observe__items(self, change):
-        print("items changed: ", change)
+        print(change)
 
     #--------------------------------------------------------------------------
     # Reimplementations

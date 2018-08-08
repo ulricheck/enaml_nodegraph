@@ -5,7 +5,7 @@ from enaml.core.declarative import d_
 from enaml.colors import ColorMember
 
 from enaml_nodegraph.widgets.graphicsscene import GraphicsScene, ProxyGraphicsScene
-
+from enaml_nodegraph.widgets.node_item import NodeItem
 
 class ProxyNodeGraphicsScene(ProxyGraphicsScene):
     """ The abstract definition of a proxy QtWidgets.QGraphicsScene object.
