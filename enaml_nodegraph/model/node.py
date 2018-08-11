@@ -29,7 +29,6 @@ class Node(Atom):
             elif change['operation'] == 'remove':
                 change['item'].node = None
 
-
     def _observe_outputs(self, change):
         if change['type'] == 'create':
             for n in change['value']:

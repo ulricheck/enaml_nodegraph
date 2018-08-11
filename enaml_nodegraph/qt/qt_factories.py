@@ -34,11 +34,17 @@ def node_socket_factory():
     return QtNodeSocket
 
 
+def edge_item_factory():
+    from .qt_edge_item import QtEdgeItem
+    return QtEdgeItem
+
+
 # Inject the factory
 QT_FACTORIES.update({
     'NodeItem': node_item_factory,
     'NodeContent': node_content_factory,
     'NodeSocket': node_socket_factory,
+    'EdgeItem': edge_item_factory,
     'NodeGraphicsScene': node_graphics_scene_factory,
     'GraphicsScene': graphics_scene_factory,
     'GraphicsView': graphics_view_factory,

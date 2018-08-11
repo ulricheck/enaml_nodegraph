@@ -1,11 +1,21 @@
 __author__ = 'jack'
+import logging
 
-from atom.api import Typed, Int, Bool, ForwardTyped, observe, set_default, Signal
-from enaml.core.declarative import d_
-from enaml.colors import ColorMember, parse_color
+from atom.api import Typed, List, Instance, ForwardTyped, ForwardInstance, set_default
 from enaml.widgets.control import Control, ProxyControl
+from enaml.core.declarative import d_
 
+from .graphicsitem import GraphicsItem
 from .graphicsscene import GraphicsScene
+from .edge_item import EdgeItem, EdgeType
+from .node_socket import NodeSocket, SocketType
+
+log = logging.getLogger(__name__)
+
+
+def import_graph_controller_class():
+    from enaml_nodegraph.controller import GraphControllerBase
+    return GraphControllerBase
 
 
 class ProxyGraphicsView(ProxyControl):
@@ -27,7 +37,17 @@ class GraphicsView(Control):
 
     """
 
-    scene = Typed(GraphicsScene)
+    controller = d_(ForwardInstance(import_graph_controller_class))
+
+    scene = d_(Typed(GraphicsScene))
+
+    selectedItems = d_(List(GraphicsItem))
+
+    #: An graphicsview widget expands freely in height and width by default.
+    hug_width = set_default('ignore')
+    hug_height = set_default('ignore')
+
+    _dragEdge = Instance(EdgeItem)
 
     #: A reference to the ProxyGraphicsView object
     proxy = Typed(ProxyGraphicsView)
@@ -49,6 +69,10 @@ class GraphicsView(Control):
             self.scene = None
 
     def activate_top_down(self):
+        if not self.scene:
+            log.warning("GraphicsView needs a scene to work properly.")
+        if not self.controller:
+            log.warning("GraphicsView needs controller to work properly.")
         super(GraphicsView, self).activate_top_down()
         if self.scene is not None:
             self.proxy.set_scene(self.scene)
@@ -61,7 +85,53 @@ class GraphicsView(Control):
         if self.proxy is not None and change['value'] is not None:
             self.proxy.set_scene(change['value'])
 
+    def _observe_controller(self, change):
+        ctrl = change['value']
+        if ctrl is not None:
+            ctrl.set_view(self)
+        if self.scene is not None:
+            self.scene.controller = ctrl
+
     #--------------------------------------------------------------------------
     # API
     #--------------------------------------------------------------------------
 
+    def edgeDragStart(self, item):
+        if self.controller is None:
+            log.warning("GraphicsView has no controller - ignoring request")
+            return
+        if isinstance(item, NodeSocket) and item.socket_type == SocketType.OUTPUT:
+            edge_typename = self.controller.edge_type_for_start_socket(item.parent.id, item.name)
+            self._dragEdge = self.controller.create_edge(edge_typename,
+                                                         start_socket=item,
+                                                         end_socket=None,
+                                                         scene=self.scene)
+            self._dragEdge.pos_destination = item.absolute_position
+        else:
+            log.warning("Invalid edge start: ", item)
+
+    def edgeDragEnd(self, item):
+        if self._dragEdge is None:
+            return
+
+        ss = self._dragEdge.start_socket
+        if isinstance(item, NodeSocket) and item.socket_type == SocketType.INPUT and \
+                self.controller.edge_can_connect(ss.parent.id, ss.name, item.parent.id, item.name):
+            self._dragEdge.end_socket = item
+            self._dragEdge.start_socket.edges.append(self._dragEdge)
+            self._dragEdge.end_socket.edges.append(self._dragEdge)
+            self.controller.edge_connected(self._dragEdge.id)
+        else:
+            if self._dragEdge is not None:
+                self.controller.destroy_edge(self._dragEdge.id)
+
+        self._dragEdge = None
+
+    def updatePoseEdgeDrag(self, pos):
+        if self._dragEdge is not None:
+            self._dragEdge.pos_destination = pos
+
+    def handle_selection_changed(self, items):
+        self.selectedItems = items
+        if self.controller is not None:
+            self.controller.itemsSelected(items)

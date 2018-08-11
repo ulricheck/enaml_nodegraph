@@ -5,6 +5,7 @@ from enaml_nodegraph.widgets.node_socket import ProxyNodeSocket, SocketPosition,
 
 from .qt_graphicsitem import QGraphicsItem, QtGraphicsItem
 from .qt_node_item import QtNodeItem
+from enaml_nodegraph.primitives import Point2D
 
 
 class QNodeSocket(QGraphicsItem):
@@ -49,7 +50,8 @@ class QtNodeSocket(QtGraphicsItem, ProxyNodeSocket):
     radius = Float(6.0)
     outline_width = Float(1.0)
 
-    position = Typed(QtCore.QPointF)
+    relative_position = Typed(Point2D)
+
     color_background = Typed(QtGui.QColor)
     color_outline = Typed(QtGui.QColor)
     pen_outline = Typed(QtGui.QPen)
@@ -76,15 +78,14 @@ class QtNodeSocket(QtGraphicsItem, ProxyNodeSocket):
         self.set_name(d.name)
         self.set_index(d.index)
         self.set_socket_type(d.socket_type)
-        self.set_socket_spacing(d.socket_spacing)
         self.set_socket_position(d.socket_position)
+        self.set_relative_position(d.compute_socket_position())
         self.set_radius(d.radius)
         self.set_outline_width(d.outline_width)
 
         self.set_color_background(d.color_background)
         self.set_color_outline(d.color_outline)
 
-        self.widget.setPos(self.position)
 
     #--------------------------------------------------------------------------
     # observers
@@ -95,13 +96,9 @@ class QtNodeSocket(QtGraphicsItem, ProxyNodeSocket):
             self.pen_outline = QtGui.QPen(self.color_outline)
             self.pen_outline.setWidthF(self.outline_width)
 
-    @observe('socket_position', 'index')
-    def _update_position(self, change):
-        self.position = QtCore.QPointF(*self.compute_socket_position())
-
     def _observe_position(self, change):
         if self.widget is not None:
-            self.widget.setPos(self.position)
+            self.widget.setPos(QtCore.QPointF(self.relative_position.x, self.relative_position.y))
 
     #--------------------------------------------------------------------------
     # Private API
@@ -112,23 +109,6 @@ class QtNodeSocket(QtGraphicsItem, ProxyNodeSocket):
         painter.setBrush(self.color_background)
         painter.setPen(self.pen_outline)
         painter.drawEllipse(-self.radius, -self.radius, 2 * self.radius, 2 * self.radius)
-
-    def compute_socket_position(self):
-        node = self.parent()
-        if isinstance(node, QtNodeItem):
-            x = 0 if (self.socket_position in (SocketPosition.LEFT_TOP, SocketPosition.LEFT_BOTTOM)) else node.width
-
-            if self.socket_position in (SocketPosition.LEFT_BOTTOM, SocketPosition.RIGHT_BOTTOM):
-                # start from bottom
-                y = node.height - node.edge_size - node.padding - self.index * self.socket_spacing
-            else :
-                # start from top
-                y = node.title_height + node.padding + node.edge_size + self.index * self.socket_spacing
-
-            return [x, y]
-        else:
-            return [0, 0]
-
 
     #--------------------------------------------------------------------------
     # ProxyNodeSocket API
@@ -142,11 +122,13 @@ class QtNodeSocket(QtGraphicsItem, ProxyNodeSocket):
     def set_socket_type(self, socket_type):
         self.socket_type = socket_type
 
-    def set_socket_spacing(self, socket_spacing):
-        self.socket_spacing = socket_spacing
-
     def set_socket_position(self, socket_position):
         self.socket_position = socket_position
+
+    def set_relative_position(self, position):
+        self.relative_position = position
+        if self.widget is not None:
+            self.widget.setPos(QtCore.QPointF(self.relative_position.x, self.relative_position.y))
 
     def set_radius(self, radius):
         self.radius = radius

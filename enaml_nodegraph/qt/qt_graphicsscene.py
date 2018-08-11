@@ -5,7 +5,7 @@
 #
 # The full license is in the file COPYING.txt, distributed with this software.
 #------------------------------------------------------------------------------
-from atom.api import Typed, Int, Coerced
+from atom.api import Typed, Int, Dict, Coerced
 
 from enaml.styling import StyleCache
 from enaml.drag_drop import DropAction
@@ -45,6 +45,7 @@ class QtGraphicsScene(QtToolkitObject, ProxyGraphicsScene):
 
     #: Internal storage for the drag origin position.
     _drag_origin = Typed(QPoint)
+
 
     #--------------------------------------------------------------------------
     # Initialization API
@@ -348,7 +349,7 @@ class QtGraphicsScene(QtToolkitObject, ProxyGraphicsScene):
     #--------------------------------------------------------------------------
 
     #--------------------------------------------------------------------------
-    # ProxyGraphicsScene API
+    # GraphicsScene API
     #--------------------------------------------------------------------------
     def update(self, *args):
         """
@@ -377,7 +378,6 @@ class QtGraphicsScene(QtToolkitObject, ProxyGraphicsScene):
         """ Set the background color of the widget.
 
         """
-        print("set_background graphicsscene...")
         widget = self.widget
         widget.setBackgroundBrush(QColor.fromRgba(background.argb))
 

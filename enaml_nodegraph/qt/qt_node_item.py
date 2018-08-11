@@ -1,4 +1,4 @@
-from atom.api import Typed, Int, Float, Instance, observe
+from atom.api import Typed, Int, Float, Unicode, Instance, observe
 from enaml.qt import QtCore, QtGui, QtWidgets
 from enaml.qt.QtGui import QFont, QColor
 
@@ -33,12 +33,10 @@ class QNodeItem(QGraphicsItem):
             float(self.proxy.height)
         ).normalized()
 
-    def mouseMoveEvent(self, event):
-        super().mouseMoveEvent(event)
-        self.proxy.position = Point2D(x=self.x(), y=self.y())
-
-    def mouseReleaseEvent(self, event):
-        super().mouseReleaseEvent(event)
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.ItemPositionHasChanged:
+            self.proxy.position = Point2D(x=value.x(), y=value.y())
+        return super(QNodeItem, self).itemChange(change, value)
 
     # @todo: these are expected from toolkitobject - but are not valid for graphics items
     def setObjectName(self, name):
@@ -56,8 +54,11 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
 
     """
 
+    id = Unicode()
+
     width = Int(180)
     height = Int(240)
+    position = Typed(Point2D)
 
     edge_size = Float(10.0)
     title_height = Float(24.0)
@@ -70,8 +71,6 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
     color_background = Typed(QtGui.QColor)
 
     content = Instance(QtNodeContent)
-
-    position = Typed(Point2D)
 
     #: A reference to the widget created by the proxy.
     widget = Typed(QNodeItem)
@@ -92,8 +91,11 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
         """
         super(QtNodeItem, self).init_widget()
         d = self.declaration
+        self.set_id(d.id)
+
         self.set_width(d.width)
         self.set_height(d.height)
+        self.set_position(d.position)
         self.set_edge_size(d.edge_size)
         self.set_title_height(d.title_height)
         self.set_padding(d.padding)
@@ -109,7 +111,7 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
 
         self.widget.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable)
         self.widget.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable)
-        self.position = Point2D(x=self.widget.x(), y=self.widget.y())
+        self.widget.setFlag(QtWidgets.QGraphicsItem.ItemSendsGeometryChanges)
 
     def activate_bottom_up(self):
         """ Activate the proxy tree for the bottom-up pass.
@@ -129,7 +131,7 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
         self.widget.title_item.setTextWidth(self.width - 2 * self.padding)
 
     def _observe_position(self, change):
-        print(change['value'])
+        self.declaration.position = change['value']
 
     #--------------------------------------------------------------------------
     # Private API
@@ -173,6 +175,10 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
     #--------------------------------------------------------------------------
     # ProxyNodeItem API
     #--------------------------------------------------------------------------
+
+    def set_id(self, id):
+        self.id = id
+
     def set_name(self, name):
         self.widget.title_item.setPlainText(name)
 
@@ -181,6 +187,10 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
 
     def set_height(self, height):
         self.height = height
+
+    def set_position(self, position):
+        self.position = position
+        self.widget.setPos(QtCore.QPointF(position.x, position.y))
 
     def set_edge_size(self, edge_size):
         self.edge_size = edge_size

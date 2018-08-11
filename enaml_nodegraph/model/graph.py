@@ -3,6 +3,7 @@ from atom.api import Atom, List, Dict, Int, Str, ContainerList, ForwardTyped, In
 from .node import Node
 from .edge import Edge
 
+
 class Graph(Atom):
 
     name = Str()

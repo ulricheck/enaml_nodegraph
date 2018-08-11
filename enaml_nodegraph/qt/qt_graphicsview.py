@@ -4,6 +4,7 @@ from enaml.qt.qt_control import QtControl
 
 from enaml_nodegraph.widgets.graphicsview import ProxyGraphicsView
 from enaml_nodegraph.widgets.graphicsscene import GraphicsScene
+from enaml_nodegraph.widgets.graphicsitem import GraphicsItem
 from enaml_nodegraph.primitives import Point2D
 
 from enaml_nodegraph.qt.qt_node_item import QNodeItem
@@ -57,13 +58,13 @@ class QGraphicsView(QtWidgets.QGraphicsView):
             super().mouseReleaseEvent(event)
 
     def middleMouseButtonPress(self, event):
-        # release_event = QtGui.QMouseEvent(QtCore.QEvent.MouseButtonRelease,
-        #                                   event.localPos(),
-        #                                   event.screenPos(),
-        #                                   QtCore.Qt.LeftButton,
-        #                                   QtCore.Qt.NoButton,
-        #                                   event.modifiers())
-        # super().mouseReleaseEvent(release_event)
+        release_event = QtGui.QMouseEvent(QtCore.QEvent.MouseButtonRelease,
+                                          event.localPos(),
+                                          event.screenPos(),
+                                          QtCore.Qt.LeftButton,
+                                          QtCore.Qt.NoButton,
+                                          event.modifiers())
+        super().mouseReleaseEvent(release_event)
         self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
         fake_event = QtGui.QMouseEvent(event.type(),
                                        event.localPos(),
@@ -107,7 +108,7 @@ class QGraphicsView(QtWidgets.QGraphicsView):
         if isinstance(item, QNodeSocket):
             if self.proxy.edgeEditMode == EdgeEditMode.MODE_NOOP:
                 self.proxy.edgeEditMode = EdgeEditMode.MODE_EDGE_DRAG
-                self.proxy.edgeDragStart(item)
+                self.proxy.edgeDragStart(item.proxy if item is not None else None)
                 return
 
         if self.proxy.edgeEditMode == EdgeEditMode.MODE_EDGE_DRAG:
@@ -152,7 +153,7 @@ class QGraphicsView(QtWidgets.QGraphicsView):
 
         if self.proxy.edgeEditMode == EdgeEditMode.MODE_EDGE_DRAG:
             if self.distanceBetweenClickAndReleaseIsOff(event):
-                res = self.proxy.edgeDragEnd(item)
+                res = self.proxy.edgeDragEnd(item.proxy if item is not None else None)
                 self.proxy.edgeEditMode = EdgeEditMode.MODE_NOOP
                 if res:
                     return
@@ -182,8 +183,7 @@ class QGraphicsView(QtWidgets.QGraphicsView):
     def mouseMoveEvent(self, event):
         if self.proxy.edgeEditMode == EdgeEditMode.MODE_EDGE_DRAG:
             pos = self.mapToScene(event.pos())
-            # self.dragEdge.grEdge.setDestination(pos.x(), pos.y())
-            # self.dragEdge.grEdge.update()
+            self.proxy.updatePoseEdgeDrag(Point2D(x=pos.x(), y=pos.y()))
 
         if self.proxy.edgeEditMode == EdgeEditMode.MODE_EDGE_CUT:
             pos = self.mapToScene(event.pos())
@@ -223,6 +223,8 @@ class QGraphicsView(QtWidgets.QGraphicsView):
 
     def wheelEvent(self, event):
         # calculate our zoom Factor
+
+        # @todo: use modifiers to switch between panning and zooming
         zoomOutFactor = 1 / self.proxy.zoomInFactor
 
         zoom = self.proxy.zoom
@@ -264,8 +266,6 @@ class QtGraphicsView(QtControl, ProxyGraphicsView):
     zoomStep = Int(1)
     zoom = Range(low=0, high=100, value=50)
 
-    cutline = None  # @todo ...
-
     #: Cyclic notification guard. This a bitfield of multiple guards.
     _guard = Int(0)
 
@@ -277,15 +277,14 @@ class QtGraphicsView(QtControl, ProxyGraphicsView):
         """ Create the underlying html widget.
 
         """
-        widget = QGraphicsView(self, self.parent_widget(),)
-        self.widget = widget
+        self.widget = QGraphicsView(self, self.parent_widget())
 
     def init_widget(self):
         """ Initialize the underlying widget.
         """
         super(QtGraphicsView, self).init_widget()
         self.widget.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.HighQualityAntialiasing |
-                                   QtGui.QPainter.TextAntialiasing | QtGui.QPainter.SmoothPixmapTransform)
+                                         QtGui.QPainter.TextAntialiasing | QtGui.QPainter.SmoothPixmapTransform)
 
         self.widget.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
 
@@ -299,6 +298,7 @@ class QtGraphicsView(QtControl, ProxyGraphicsView):
         super(QtGraphicsView, self).activate_bottom_up()
         if self.scene is not None:
             self.widget.setScene(self.scene.proxy.widget)
+            self.scene.proxy.widget.selectionChanged.connect(self.handle_selection_changed)
         else:
             print("warning: no scene defined for graphicsview")
 
@@ -306,11 +306,6 @@ class QtGraphicsView(QtControl, ProxyGraphicsView):
     #--------------------------------------------------------------------------
     # Observers
     #--------------------------------------------------------------------------
-    def _observe_zoom(self, change):
-        print("Zoom: %d" % change['value'])
-
-    def _observe_edgeEditMode(self, change):
-        print("edgeEditMode: %s" % change['value'])
 
     #--------------------------------------------------------------------------
     # Protected API
@@ -318,17 +313,20 @@ class QtGraphicsView(QtControl, ProxyGraphicsView):
     def set_scene(self, scene):
         if isinstance(scene, GraphicsScene):
             self.scene = scene
-            if self.widget is not None and scene.proxy.widget is not None:
-                self.widget.setScene(scene.proxy.widget)
-
-    def update(self, *args):
-        pass
+            if scene.proxy.widget is not None:
+                if self.widget is not None:
+                    self.widget.setScene(scene.proxy.widget)
 
     def edgeDragStart(self, item):
-        print("edgeDragStart", item)
+        self.declaration.edgeDragStart(item.declaration if item is not None else None)
 
     def edgeDragEnd(self, item):
-        print("edgeDragEnd", item)
+        self.declaration.edgeDragEnd(item.declaration if item is not None else None)
 
-    def cutIntersectingEdges(self):
-        pass
+    def updatePoseEdgeDrag(self, pos):
+        self.declaration.updatePoseEdgeDrag(pos)
+
+    def handle_selection_changed(self):
+        if self.scene is not None and self.scene.proxy is not None:
+            items = self.scene.proxy.widget.selectedItems()
+            self.declaration.handle_selection_changed([i.proxy.declaration for i in items if isinstance(i.proxy.declaration, GraphicsItem)])

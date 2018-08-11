@@ -52,6 +52,8 @@ class QtNodeContent(QtControl, ProxyNodeContent):
     # Observers
     #--------------------------------------------------------------------------
     def _observe_content(self, change):
+        if self.widget is None:
+            return
         content = change['value']
         if content is not None:
             self.widget.setWidget(content.widget)
@@ -64,7 +66,8 @@ class QtNodeContent(QtControl, ProxyNodeContent):
     #--------------------------------------------------------------------------
     def set_content_geometry(self):
         n = self.parent()
-        self.content.widget.setGeometry(n.edge_size,
-                                        n.title_height + n.edge_size,
-                                        n.width - 2 * n.edge_size,
-                                        n.height - 2 * n.edge_size - n.title_height)
+        if self.content is not None and self.content.widget is not None:
+            self.content.widget.setGeometry(n.edge_size,
+                                            n.title_height + n.edge_size,
+                                            n.width - 2 * n.edge_size,
+                                            n.height - 2 * n.edge_size - n.title_height)

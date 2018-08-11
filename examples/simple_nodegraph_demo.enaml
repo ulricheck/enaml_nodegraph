@@ -1,6 +1,6 @@
 from enaml_nodegraph import install
 install()
-
+
 from enaml.widgets.api import MainWindow, Container, Field
 
 from enaml_nodegraph.widgets.node_item import NodeItem

@@ -1,11 +1,13 @@
 from atom.api import (
-    Int, Float, Unicode, Typed, IntEnum, ForwardTyped, observe
+    Int, Float, Unicode, Typed, List, ContainerList, IntEnum, ForwardTyped, Property, observe
 )
 
 from enaml.core.declarative import d_
 from enaml.colors import ColorMember
 
 from .graphicsitem import GraphicsItem, ProxyGraphicsItem
+from .edge_item import EdgeItem
+from enaml_nodegraph.primitives import Point2D
 
 
 class SocketType(IntEnum):
@@ -72,18 +74,29 @@ class NodeSocket(GraphicsItem):
     color_background = d_(ColorMember("#FF7700FF"))
     color_outline = d_(ColorMember("#000000FF"))
 
+    relative_position = Typed(Point2D)
+    edges = ContainerList(EdgeItem)
+
     #: A reference to the ProxyComboBox object.
     proxy = Typed(ProxyNodeSocket)
+
+    absolute_position = Property(lambda self: self.parent.position + self.relative_position, cached=False)
 
     #--------------------------------------------------------------------------
     # Content Handlers
     #--------------------------------------------------------------------------
 
+    def destroy(self):
+        if self.scene is not None:
+            for edge in self.edges[:]:
+                self.scene.controller.destroy_edge(edge.id)
+        super(NodeSocket, self).destroy()
+
     #--------------------------------------------------------------------------
     # Observers
     #--------------------------------------------------------------------------
 
-    @observe('name', 'socket_type', 'socket_position',
+    @observe('name', 'socket_type', 'relative_position',
              'radius', 'outline_width', 'color_background', 'color_outline')
     def _update_proxy(self, change):
         """ An observer which sends state change to the proxy.
@@ -94,3 +107,30 @@ class NodeSocket(GraphicsItem):
         # @todo: changes need to propagate to the parent ...
         self.request_update()
 
+    @observe('socket_position', 'index', 'socket_spacing')
+    def _update_relative_position(self, change):
+        self.update_sockets()
+
+    #--------------------------------------------------------------------------
+    # Private API
+    #--------------------------------------------------------------------------
+
+    def update_sockets(self):
+        self.relative_position = self.compute_socket_position()
+
+    def compute_socket_position(self):
+        from .node_item import NodeItem
+        node = self.parent
+        if isinstance(node, NodeItem):
+            x = 0 if (self.socket_position in (SocketPosition.LEFT_TOP, SocketPosition.LEFT_BOTTOM)) else node.width
+
+            if self.socket_position in (SocketPosition.LEFT_BOTTOM, SocketPosition.RIGHT_BOTTOM):
+                # start from bottom
+                y = node.height - node.edge_size - node.padding - self.index * self.socket_spacing
+            else :
+                # start from top
+                y = node.title_height + node.padding + node.edge_size + self.index * self.socket_spacing
+
+            return Point2D(x=x, y=y)
+        else:
+            return Point2D(x=0, y=0)

@@ -6,7 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #------------------------------------------------------------------------------
 from atom.api import (
-    Bool, IntEnum, Int, Unicode, Coerced, Property, Typed, ForwardTyped, Event, observe
+    Bool, IntEnum, Int, Unicode, Coerced, Property, Typed, ForwardTyped, ForwardInstance, Dict, observe
 )
 from enaml.colors import ColorMember
 from enaml.fonts import FontMember
@@ -16,6 +16,13 @@ from enaml.styling import Stylable
 from enaml.widgets.toolkit_object import ToolkitObject, ProxyToolkitObject
 
 from enaml_nodegraph.widgets.graphicsitem import GraphicsItem
+from enaml_nodegraph.widgets.node_item import NodeItem
+from enaml_nodegraph.widgets.edge_item import EdgeItem
+
+
+def import_graph_controller_class():
+    from enaml_nodegraph.controller import GraphControllerBase
+    return GraphControllerBase
 
 
 class ProxyGraphicsScene(ProxyToolkitObject):
@@ -57,7 +64,6 @@ class SceneGuard(IntEnum):
     NOOP = 0x01
     INITIALIZING = 0x02
     ACTIVATING = 0x04
-
 
 
 class Feature(IntEnum):
@@ -114,6 +120,15 @@ class GraphicsScene(ToolkitObject, Stylable):
 
     guard = d_(Coerced(SceneGuard.Flags))
 
+    #: Nodegraph Controller
+    controller = d_(ForwardInstance(import_graph_controller_class))
+
+    nodes = Dict(Unicode(), NodeItem)
+    edges = Dict(Unicode(), EdgeItem)
+
+    #: private dict to generate consecutive ids for item types
+    _item_id_generator = Dict()
+
     #: A reference to the ProxyGraphicsScene object.
     proxy = Typed(ProxyGraphicsScene)
 
@@ -135,10 +150,9 @@ class GraphicsScene(ToolkitObject, Stylable):
         self.guard = SceneGuard.INITIALIZING
         super(GraphicsScene, self).child_removed(child)
         self.get_member('_items').reset(self)
+        if isinstance(child, GraphicsItem):
+            self.delete_item(child)
         self.guard = SceneGuard.NOOP
-
-    def activate_top_down(self):
-        super(GraphicsScene, self).activate_top_down()
 
     #--------------------------------------------------------------------------
     # Observers
@@ -155,9 +169,6 @@ class GraphicsScene(ToolkitObject, Stylable):
         # The superclass implementation is sufficient.
         super(GraphicsScene, self)._update_proxy(change)
         self.proxy.update()
-
-    def _observe__items(self, change):
-        print(change)
 
     #--------------------------------------------------------------------------
     # Reimplementations
@@ -184,9 +195,24 @@ class GraphicsScene(ToolkitObject, Stylable):
     def add_item(self, item):
         item.set_scene(self)
 
+        if isinstance(item, NodeItem):
+            self.nodes[item.id] = item
+        elif isinstance(item, EdgeItem):
+            self.edges[item.id] = item
+
     def delete_item(self, item):
-        # @todo: need to unregister observer ..
-        pass
+        item.set_scene(None)
+
+        if isinstance(item, NodeItem):
+            self.nodes.pop(item.id, None)
+        elif isinstance(item, EdgeItem):
+            self.edges.pop(item.id, None)
+
+    def generate_item_id(self, cls):
+        id = self._item_id_generator.get(cls, 0)
+        id += 1
+        self._item_id_generator[cls] = id
+        return id
 
     def set_focus(self):
         """ Set the keyboard input focus to this widget.

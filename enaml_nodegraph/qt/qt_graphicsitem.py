@@ -12,7 +12,7 @@ from enaml_nodegraph.widgets.graphicsitem import Feature, ProxyGraphicsItem
 
 from enaml.qt.QtCore import Qt, QPoint
 from enaml.qt.QtGui import QDrag, QCursor
-from enaml.qt.QtWidgets import QGraphicsItem, QApplication
+from enaml.qt.QtWidgets import QGraphicsItem, QGraphicsPathItem, QApplication
 
 from enaml.qt import focus_registry
 from enaml.qt.qt_drag_drop import QtDropEvent
@@ -71,6 +71,8 @@ class QtGraphicsItem(QtToolkitObject, ProxyGraphicsItem):
         """ Destroy the underlying QtGraphicsItem object.
 
         """
+        if self.widget is not None and self.widget.scene() is not None:
+            self.widget.scene().removeItem(self.widget)
         self._teardown_features()
         focus_registry.unregister(self.widget)
         super(QtGraphicsItem, self).destroy()

@@ -50,3 +50,5 @@ class NodeContent(Control):
     # API
     #--------------------------------------------------------------------------
 
+    def update_content_geometry(self):
+        self.proxy.set_content_geometry()
