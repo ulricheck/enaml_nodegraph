@@ -1,5 +1,7 @@
 from atom.api import Atom, List, Dict, Int, Str, ForwardInstance, Typed, Instance, observe, IntEnum
 
+from .base import GraphItem
+
 def import_socket_type():
     from .socket import Socket
     return Socket
@@ -14,7 +16,7 @@ class EdgeType(IntEnum):
     EDGE_TYPE_BEZIER = 2
 
 
-class Edge(Atom):
+class Edge(GraphItem):
     graph = ForwardInstance(import_graph_type)
     start_socket = ForwardInstance(import_socket_type)
     end_socket = ForwardInstance(import_socket_type)

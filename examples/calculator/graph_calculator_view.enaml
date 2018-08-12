@@ -1,0 +1,105 @@
+from enaml_nodegraph import install
+install()
+
+from enaml.widgets.api import MainWindow, Window, Container, Field
+from enaml.layout.api import vbox, hbox, align, spacer, grid
+from enaml.widgets.api import MenuBar, Menu, Action, ActionGroup
+from enaml.widgets.api import DockPane
+
+from enaml.stdlib.message_box import question
+
+from enaml.widgets.ipython_console import IPythonConsole
+
+from enaml_nodegraph.widgets.graphicsview import GraphicsView
+from enaml_nodegraph.widgets.node_graphicsscene import NodeGraphicsScene
+
+
+def confirm_close(window, event):
+    button = question(
+        window, 'Example Application', 'Are you sure you want to quit?'
+    )
+    if button and button.action == 'accept':
+        event.accept()
+    else:
+        event.ignore()
+
+
+def deleteSelectedItems(controller, items):
+    from enaml_nodegraph.widgets.node_item import NodeItem
+    from enaml_nodegraph.widgets.edge_item import EdgeItem
+    for item in items:
+        if isinstance(item, NodeItem):
+            controller.destroy_node(item.id)
+        elif isinstance(item, EdgeItem):
+            controller.destroy_edge(item.id)
+
+
+enamldef DebugConsole(Window):
+    attr view
+    attr scene
+
+    title << 'Debug'
+    Container:
+        padding = (0, 0, 0, 0)
+        alias ipy
+        constraints = [vbox(ipy, spacing=3)]
+
+        IPythonConsole: ipy:
+            initial_ns = {"view": view, "scene": scene}
+
+
+
+enamldef Main(MainWindow): mainwindow:
+
+    attr controller
+
+    title = 'Nodegraph Test'
+    closing :: confirm_close(self, change['value'])
+
+
+    MenuBar:
+        Menu:
+            title = '&File'
+            Action:
+                text = 'Quit Editor\tCtrl+Q'
+                triggered :: mainwindow.close()
+        Menu:
+            title = '&Edit'
+            Action:
+                text = 'Cut\tCtrl+X'
+                triggered :: deleteSelectedItems(controller, view1.selectedItems)
+
+        Menu:
+            title = '&Tools'
+            Action:
+                text = 'Debug Console\tCtrl+D'
+                triggered ::
+                    win = DebugConsole(view=view1, scene=scene)
+                    win.show()
+
+        Menu:
+            title = '&Nodes'
+            Action:
+                text = 'Add NumberInput\tCtrl+1'
+                triggered :: controller.create_node("number_input")
+            Action:
+                text = 'Add SliderInput\tCtrl+2'
+                triggered :: controller.create_node("slider_input")
+            Action:
+                text = 'Add BinaryOperator\tCtrl+3'
+                triggered :: controller.create_node("binary_operator")
+            Action:
+                text = 'Add NumberOutput\tCtrl+4'
+                triggered :: controller.create_node("number_output")
+
+    Container: gvc:
+        padding = (0, 0, 0, 0)
+        alias view1
+        constraints = [vbox(view1, spacing=3)]
+
+        GraphicsView: view1:
+            controller = mainwindow.controller
+            NodeGraphicsScene: scene:
+                background = "#393939"
+                color_light = "#2f2f2f"
+                color_dark = "#292929"

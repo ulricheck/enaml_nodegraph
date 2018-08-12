@@ -35,6 +35,8 @@ class GraphControllerBase(Atom):
     def edge_connected(self, id):
         pass
 
+    def edge_disconnect(self, id):
+        pass
 
 
 

@@ -1,5 +1,5 @@
 from atom.api import (
-    Int, Float, Unicode, Typed, List, Instance, ForwardTyped, observe
+    Atom, Int, Float, Unicode, Typed, List, Instance, ForwardTyped, observe
 )
 
 from enaml.core.declarative import d_
@@ -82,6 +82,9 @@ class NodeItem(GraphicsItem):
     content = Instance(NodeContent)
     input_sockets = List(NodeSocket)
     output_sockets = List(NodeSocket)
+
+    #: the model item from the underlying graph structure
+    model = d_(Typed(Atom))
 
     #: A reference to the ProxyComboBox object.
     proxy = Typed(ProxyNodeItem)

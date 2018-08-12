@@ -1,0 +1,123 @@
+from enaml.widgets.api import Container, Field, SpinBox, ObjectCombo, Slider
+
+
+from enaml_nodegraph.widgets.node_item import NodeItem
+from enaml_nodegraph.widgets.node_content import NodeContent
+from enaml_nodegraph.widgets.node_socket import NodeSocket, SocketPosition, SocketType
+from enaml_nodegraph.widgets.edge_item import EdgeItem, EdgeType
+
+
+def enum_labels(model, attr):
+    """ Return the list of enum labels for the given model and attr.
+
+    """
+    items = getattr(type(model), attr).items
+    return sorted(items)
+
+
+enamldef NumberInput(NodeItem): node:
+    color_default = "#0000007F"
+    color_selected = "#FFA637FF"
+    color_title = "#AAAAAAFF"
+    color_title_background = "#313131FF"
+    color_background = "#212121E3"
+    height = 90
+
+    NodeSocket:
+        index = 0
+        name = "value"
+        socket_type = SocketType.OUTPUT
+        socket_position = SocketPosition.RIGHT_BOTTOM
+
+    NodeContent:
+        Container:
+            padding = (0, 0, 0, 0)
+            SpinBox: sbox:
+                maximum = 1000
+                minimum = 0
+                value >> node.model.value
+
+enamldef SliderInput(NodeItem): node:
+    color_default = "#0000007F"
+    color_selected = "#FFA637FF"
+    color_title = "#AAAAAAFF"
+    color_title_background = "#313131FF"
+    color_background = "#212121E3"
+    height = 90
+
+    NodeSocket:
+        index = 0
+        name = "value"
+        socket_type = SocketType.OUTPUT
+        socket_position = SocketPosition.RIGHT_BOTTOM
+
+    NodeContent:
+        Container:
+            padding = (0, 0, 0, 0)
+            Slider: slider:
+                tick_interval = 5
+                maximum = 1000
+                minimum = 1
+                value >> node.model.value
+
+enamldef NumberOutput(NodeItem): node:
+    color_default = "#0000007F"
+    color_selected = "#FFA637FF"
+    color_title = "#AAAAAAFF"
+    color_title_background = "#313131FF"
+    color_background = "#212121E3"
+    height = 90
+
+    NodeSocket:
+        index = 0
+        name = "value"
+        socket_type = SocketType.INPUT
+        socket_position = SocketPosition.LEFT_TOP
+
+    NodeContent:
+        Container:
+            padding = (0, 0, 0, 0)
+            Field: display:
+                read_only = True
+                text << str(node.model.value)
+
+enamldef BinaryOperator(NodeItem): node:
+    color_default = "#0000007F"
+    color_selected = "#FFA637FF"
+    color_title = "#AAAAAAFF"
+    color_title_background = "#313131FF"
+    color_background = "#212121E3"
+    height = 90
+
+    NodeSocket:
+        index = 0
+        name = "in1"
+        socket_type = SocketType.INPUT
+        socket_position = SocketPosition.LEFT_TOP
+    NodeSocket:
+        index = 1
+        name = "in2"
+        socket_type = SocketType.INPUT
+        socket_position = SocketPosition.LEFT_TOP
+
+    NodeSocket:
+        index = 0
+        name = "result"
+        socket_type = SocketType.OUTPUT
+        socket_position = SocketPosition.RIGHT_TOP
+
+    NodeContent:
+        Container:
+            padding = (0, 0, 0, 0)
+            ObjectCombo: operator:
+                items = enum_labels(node.model, "operator")
+                selected := node.model.operator
+
+
+enamldef Edge(EdgeItem):
+    color_default = "#001000FF"
+    color_selected = "#00FF00FF"
+    line_width = 3.0
+    edge_type = EdgeType.EDGE_TYPE_BEZIER
+    edge_roundness = 100
+

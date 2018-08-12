@@ -1,6 +1,8 @@
 from atom.api import Atom, List, Dict, Int, Str, ForwardTyped, Typed, ForwardInstance, ContainerList, Instance, observe, IntEnum
 
+from .base import GraphItem
 from .edge import Edge
+
 
 def import_node_type():
     from .node import Node
@@ -12,7 +14,7 @@ class SocketType(IntEnum):
     OUTPUT = 2
 
 
-class Socket(Atom):
+class Socket(GraphItem):
     name = Str()
     index = Int()
 

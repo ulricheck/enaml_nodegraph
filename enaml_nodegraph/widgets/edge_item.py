@@ -1,5 +1,5 @@
 from atom.api import (
-    Int, Float, Unicode, Typed, IntEnum, ForwardTyped, ForwardInstance, observe
+    Atom, Int, Float, Unicode, Typed, IntEnum, ForwardTyped, ForwardInstance, observe
 )
 
 from enaml.core.declarative import d_
@@ -66,6 +66,9 @@ class EdgeItem(GraphicsItem):
     start_socket = ForwardInstance(import_node_socket)
     end_socket = ForwardInstance(import_node_socket)
 
+    #: the model item from the underlying graph structure
+    model = d_(Typed(Atom))
+
     #: A reference to the ProxyComboBox object.
     proxy = Typed(ProxyEdgeItem)
 
@@ -90,10 +93,14 @@ class EdgeItem(GraphicsItem):
     #--------------------------------------------------------------------------
 
     def destroy(self):
+        if self.scene is not None and self.scene.controller is not None:
+            self.scene.controller.edge_disconnect(self.id)
+
         if self.start_socket and self in self.start_socket.edges:
             self.start_socket.edges.remove(self)
         if self.end_socket and self in self.end_socket.edges:
             self.end_socket.edges.remove(self)
+
         super(EdgeItem, self).destroy()
 
     #--------------------------------------------------------------------------

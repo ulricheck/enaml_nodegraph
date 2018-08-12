@@ -1,13 +1,14 @@
 from atom.api import Atom, List, Dict, Int, Str, ContainerList, ForwardTyped, Instance, observe
 
 from .socket import Socket, SocketType
+from .base import GraphItem
 
 def import_graph_type():
     from .graph import Graph
     return Graph
 
 
-class Node(Atom):
+class Node(GraphItem):
     name = Str()
 
     graph = ForwardTyped(import_graph_type)

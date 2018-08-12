@@ -1,10 +1,11 @@
 from atom.api import Atom, List, Dict, Int, Str, ContainerList, ForwardTyped, Instance, observe
 
+from .base import GraphItem
 from .node import Node
 from .edge import Edge
 
 
-class Graph(Atom):
+class Graph(GraphItem):
 
     name = Str()
 
