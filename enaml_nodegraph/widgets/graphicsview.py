@@ -101,7 +101,7 @@ class GraphicsView(Control):
             log.warning("GraphicsView has no controller - ignoring request")
             return
         if isinstance(item, NodeSocket) and item.socket_type == SocketType.OUTPUT:
-            edge_typename = self.controller.edge_type_for_start_socket(item.parent.id, item.name)
+            edge_typename = self.controller.edge_type_for_start_socket(item.parent.id, item.id)
             self._dragEdge = self.controller.create_edge(edge_typename,
                                                          start_socket=item,
                                                          end_socket=None,
@@ -116,7 +116,7 @@ class GraphicsView(Control):
 
         ss = self._dragEdge.start_socket
         if isinstance(item, NodeSocket) and item.socket_type == SocketType.INPUT and \
-                self.controller.edge_can_connect(ss.parent.id, ss.name, item.parent.id, item.name):
+                self.controller.edge_can_connect(ss.parent.id, ss.id, item.parent.id, item.id):
             self._dragEdge.end_socket = item
             self._dragEdge.start_socket.edges.append(self._dragEdge)
             self._dragEdge.end_socket.edges.append(self._dragEdge)

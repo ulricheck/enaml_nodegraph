@@ -1,4 +1,4 @@
-from atom.api import Atom, List, Dict, Int, Str, ContainerList, ForwardTyped, Instance, observe
+from atom.api import Unicode, Dict, Property, Str, ContainerList, ForwardTyped
 
 from .socket import Socket, SocketType
 from .base import GraphItem
@@ -9,12 +9,16 @@ def import_graph_type():
 
 
 class Node(GraphItem):
-    name = Str()
+    id = Str()
+    name = Unicode()
 
     graph = ForwardTyped(import_graph_type)
 
     inputs = ContainerList(Socket)
     outputs = ContainerList(Socket)
+
+    input_dict = Property(lambda self: self._mk_input_dict(), cached=True)
+    output_dict = Property(lambda self: self._mk_output_dict(), cached=True)
 
     def _observe_inputs(self, change):
         if change['type'] == 'create':
@@ -29,6 +33,10 @@ class Node(GraphItem):
                 change['item'].index = change['value'].index(n)
             elif change['operation'] == 'remove':
                 change['item'].node = None
+        self.get_member('input_dict').reset(self)
+
+    def _mk_input_dict(self):
+        return {v.name: v for v in self.inputs}
 
     def _observe_outputs(self, change):
         if change['type'] == 'create':
@@ -43,4 +51,8 @@ class Node(GraphItem):
                 change['item'].index = change['value'].index(n)
             elif change['operation'] == 'remove':
                 change['item'].node = None
+        self.get_member('output_dict').reset(self)
+
+    def _mk_output_dict(self):
+        return {v.name: v for v in self.outputs}
 

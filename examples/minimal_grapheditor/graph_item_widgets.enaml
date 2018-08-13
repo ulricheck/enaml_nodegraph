@@ -16,23 +16,23 @@ enamldef TestNode1(NodeItem):
 
     NodeSocket:
         index = 0
-        name = "A"
+        id = "A"
         socket_type = SocketType.INPUT
         socket_position = SocketPosition.LEFT_TOP
     NodeSocket:
         index = 1
-        name = "B"
+        id = "B"
         socket_type = SocketType.INPUT
         socket_position = SocketPosition.LEFT_TOP
 
     NodeSocket:
         index = 0
-        name = "C"
+        id = "C"
         socket_type = SocketType.OUTPUT
         socket_position = SocketPosition.RIGHT_BOTTOM
     NodeSocket:
         index = 1
-        name = "D"
+        id = "D"
         socket_type = SocketType.OUTPUT
         socket_position = SocketPosition.RIGHT_BOTTOM
 
@@ -51,23 +51,23 @@ enamldef TestNode2(NodeItem):
 
     NodeSocket:
         index = 0
-        name = "A"
+        id = "A"
         socket_type = SocketType.INPUT
         socket_position = SocketPosition.LEFT_BOTTOM
     NodeSocket:
         index = 1
-        name = "B"
+        id = "B"
         socket_type = SocketType.INPUT
         socket_position = SocketPosition.LEFT_BOTTOM
 
     NodeSocket:
         index = 0
-        name = "C"
+        id = "C"
         socket_type = SocketType.OUTPUT
         socket_position = SocketPosition.RIGHT_TOP
     NodeSocket:
         index = 1
-        name = "D"
+        id = "D"
         socket_type = SocketType.OUTPUT
         socket_position = SocketPosition.RIGHT_TOP
 

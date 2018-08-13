@@ -1,5 +1,5 @@
 from atom.api import (
-    Int, Float, Unicode, Typed, List, ContainerList, IntEnum, ForwardTyped, Property, observe
+    Int, Float, Unicode, Typed, Str, ContainerList, IntEnum, ForwardTyped, Property, observe
 )
 
 from enaml.core.declarative import d_
@@ -62,6 +62,7 @@ class NodeSocket(GraphicsItem):
 
     """
 
+    id = d_(Str())
     name = d_(Unicode())
     index = d_(Int(0))
     socket_type = d_(Typed(SocketType))
@@ -81,6 +82,9 @@ class NodeSocket(GraphicsItem):
     proxy = Typed(ProxyNodeSocket)
 
     absolute_position = Property(lambda self: self.parent.position + self.relative_position, cached=False)
+
+    def _default_name(self):
+        return self.id
 
     #--------------------------------------------------------------------------
     # Content Handlers

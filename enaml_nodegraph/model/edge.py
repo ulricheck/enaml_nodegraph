@@ -17,6 +17,7 @@ class EdgeType(IntEnum):
 
 
 class Edge(GraphItem):
+    id = Str()
     graph = ForwardInstance(import_graph_type)
     start_socket = ForwardInstance(import_socket_type)
     end_socket = ForwardInstance(import_socket_type)

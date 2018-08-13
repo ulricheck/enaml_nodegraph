@@ -1,5 +1,5 @@
 from atom.api import (
-    Atom, Int, Float, Unicode, Typed, List, Instance, ForwardTyped, observe
+    Atom, Int, Float, Unicode, Str, Typed, List, Instance, ForwardTyped, observe
 )
 
 from enaml.core.declarative import d_
@@ -60,7 +60,7 @@ class NodeItem(GraphicsItem):
 
     """
 
-    id = d_(Unicode())
+    id = d_(Str())
     name = d_(Unicode())
 
     width = d_(Int(180))

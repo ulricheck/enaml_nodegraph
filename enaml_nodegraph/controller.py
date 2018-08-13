@@ -26,10 +26,10 @@ class GraphControllerBase(Atom):
     def destroy_edge(self, id):
         raise NotImplementedError
 
-    def edge_type_for_start_socket(self, start_node, start_socket):
+    def edge_type_for_start_socket(self, start_node_id, start_socket_id):
         raise NotImplementedError
 
-    def edge_can_connect(self, start_node, start_socket, end_node, end_socket):
+    def edge_can_connect(self, start_node_id, start_socket_id, end_node_id, end_socket_id):
         return True
 
     def edge_connected(self, id):

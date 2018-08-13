@@ -25,7 +25,7 @@ enamldef NumberInput(NodeItem): node:
 
     NodeSocket:
         index = 0
-        name = "value"
+        id = "value"
         socket_type = SocketType.OUTPUT
         socket_position = SocketPosition.RIGHT_BOTTOM
 
@@ -47,7 +47,7 @@ enamldef SliderInput(NodeItem): node:
 
     NodeSocket:
         index = 0
-        name = "value"
+        id = "value"
         socket_type = SocketType.OUTPUT
         socket_position = SocketPosition.RIGHT_BOTTOM
 
@@ -70,7 +70,7 @@ enamldef NumberOutput(NodeItem): node:
 
     NodeSocket:
         index = 0
-        name = "value"
+        id = "value"
         socket_type = SocketType.INPUT
         socket_position = SocketPosition.LEFT_TOP
 
@@ -91,18 +91,18 @@ enamldef BinaryOperator(NodeItem): node:
 
     NodeSocket:
         index = 0
-        name = "in1"
+        id = "in1"
         socket_type = SocketType.INPUT
         socket_position = SocketPosition.LEFT_TOP
     NodeSocket:
         index = 1
-        name = "in2"
+        id = "in2"
         socket_type = SocketType.INPUT
         socket_position = SocketPosition.LEFT_TOP
 
     NodeSocket:
         index = 0
-        name = "result"
+        id = "result"
         socket_type = SocketType.OUTPUT
         socket_position = SocketPosition.RIGHT_TOP
 

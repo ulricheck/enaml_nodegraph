@@ -1,5 +1,5 @@
 from atom.api import (
-    Atom, Int, Float, Unicode, Typed, IntEnum, ForwardTyped, ForwardInstance, observe
+    Atom, Int, Float, Unicode, Str, Typed, IntEnum, ForwardTyped, ForwardInstance, observe
 )
 
 from enaml.core.declarative import d_
@@ -50,7 +50,7 @@ class EdgeItem(GraphicsItem):
 
     """
 
-    id = d_(Unicode())
+    id = d_(Str())
     name = d_(Unicode())
 
     edge_type = d_(Typed(EdgeType))
@@ -77,6 +77,9 @@ class EdgeItem(GraphicsItem):
             cls = self.__class__
             return "%s-%00d" % (cls.__name__, self.scene.generate_item_id(cls))
         return "<undefined>"
+
+    def _default_name(self):
+        return self.id
 
     def _default_pos_source(self):
         if self.start_socket is not None:
