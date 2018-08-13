@@ -65,7 +65,8 @@ class NumberInputModel(model.Node):
         return [OutputSocket(name="value", data_type="int")]
 
     def _observe_value(self, change):
-        self.graph.valuesChanged()
+        if self.graph is not None:
+            self.graph.valuesChanged()
 
     def update(self):
         self.output_dict['value'].propagate_change(self.value)
@@ -102,7 +103,8 @@ class BinaryOperatorModel(model.Node):
         setattr(self, key, value)
 
     def _observe_operator(self, change):
-        self.graph.valuesChanged()
+        if self.graph is not None:
+            self.graph.valuesChanged()
 
     def update(self):
         if self.operator == 'add':
@@ -193,9 +195,7 @@ class CalculatorGraphController(GraphControllerBase):
         try:
             start_node = self.graph.node_dict[start_node_id]
             end_node = self.graph.node_dict[end_node_id]
-            print(start_node.output_dict.keys())
             start_socket = start_node.output_dict[start_socket_id]
-            print(end_node.input_dict.keys())
             end_socket = end_node.input_dict[end_socket_id]
             return end_socket.can_connect(start_socket)
         except KeyError as e:
