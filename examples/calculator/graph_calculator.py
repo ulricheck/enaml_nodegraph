@@ -77,7 +77,7 @@ class NumberOutputModel(model.Node):
     value = Int()
 
     def _default_inputs(self):
-        return [InputSocket(name="value", data_type="int")]
+        return [InputSocket(name="value", degree=1, data_type="int")]
 
     def set_value(self, key, value):
         setattr(self, key, value)
@@ -95,7 +95,8 @@ class BinaryOperatorModel(model.Node):
     result = Int()
 
     def _default_inputs(self):
-        return [InputSocket(name="in1", data_type="int"), InputSocket(name="in2", data_type="int")]
+        return [InputSocket(name="in1", degree=1, data_type="int"),
+                InputSocket(name="in2", degree=1, data_type="int")]
 
     def _default_outputs(self):
         return [OutputSocket(name="result", data_type="int")]
