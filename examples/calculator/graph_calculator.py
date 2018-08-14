@@ -12,7 +12,8 @@ from enaml_nodegraph import model
 
 with enaml.imports():
     from graph_calculator_view import Main
-    from graph_item_widgets import NumberInput, SliderInput, BinaryOperator, NumberOutput, Edge
+    from graph_item_widgets import (NumberInput, SliderInput, RampGenerator, BinaryOperator,
+                                    NumberOutput, GraphOutput, Edge)
 
 log = logging.getLogger(__name__)
 
@@ -125,8 +126,10 @@ class BinaryOperatorModel(model.Node):
 
 node_type_map = {'number_input': (NumberInput, NumberInputModel),
                  'slider_input': (SliderInput, NumberInputModel),
+                 'ramp_generator': (RampGenerator, NumberInputModel),
                  'binary_operator': (BinaryOperator, BinaryOperatorModel),
                  'number_output': (NumberOutput, NumberOutputModel),
+                 'graph_output': (GraphOutput, NumberOutputModel),
                  }
 
 edge_type_map = {'default': (Edge, model.Edge)}
@@ -216,9 +219,9 @@ class CalculatorGraphController(GraphControllerBase):
     def edge_disconnect(self, id):
         if id in self.view.scene.edges:
             edge = self.view.scene.edges[id].model
+            edge.start_socket = None
+            edge.end_socket = None
             if edge in self.graph.edges:
-                edge.start_socket = None
-                edge.end_socket = None
                 self.graph.edges.remove(edge)
             self.graph.topologyChanged()
 

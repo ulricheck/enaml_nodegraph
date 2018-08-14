@@ -9,7 +9,7 @@ from enaml_nodegraph.primitives import Point2D
 
 from enaml_nodegraph.qt.qt_node_item import QNodeItem
 from enaml_nodegraph.qt.qt_edge_item import QEdgeItem
-from enaml_nodegraph.qt.qt_node_socket import QNodeSocket
+from enaml_nodegraph.qt.qt_node_socket import QNodeSocket, QtNodeSocket
 
 
 class EdgeEditMode(IntEnum):
@@ -318,10 +318,10 @@ class QtGraphicsView(QtControl, ProxyGraphicsView):
                     self.widget.setScene(scene.proxy.widget)
 
     def edgeDragStart(self, item):
-        self.declaration.edgeDragStart(item.declaration if item is not None else None)
+        self.declaration.edgeDragStart(item.declaration if isinstance(item, QtNodeSocket) else None)
 
     def edgeDragEnd(self, item):
-        self.declaration.edgeDragEnd(item.declaration if item is not None else None)
+        self.declaration.edgeDragEnd(item.declaration if isinstance(item, QtNodeSocket) else None)
 
     def updatePoseEdgeDrag(self, pos):
         self.declaration.updatePoseEdgeDrag(pos)

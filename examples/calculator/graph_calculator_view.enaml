@@ -86,11 +86,17 @@ enamldef Main(MainWindow): mainwindow:
                 text = 'Add SliderInput\tCtrl+2'
                 triggered :: controller.create_node("slider_input")
             Action:
-                text = 'Add BinaryOperator\tCtrl+3'
+                text = 'Add RampGenerator\tCtrl+3'
+                triggered :: controller.create_node("ramp_generator")
+            Action:
+                text = 'Add BinaryOperator\tCtrl+4'
                 triggered :: controller.create_node("binary_operator")
             Action:
-                text = 'Add NumberOutput\tCtrl+4'
+                text = 'Add NumberOutput\tCtrl+5'
                 triggered :: controller.create_node("number_output")
+            Action:
+                text = 'Add GraphOutput\tCtrl+6'
+                triggered :: controller.create_node("graph_output")
 
     Container: gvc:
         padding = (0, 0, 0, 0)

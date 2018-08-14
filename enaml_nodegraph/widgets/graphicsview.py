@@ -118,8 +118,6 @@ class GraphicsView(Control):
         if isinstance(item, NodeSocket) and item.socket_type == SocketType.INPUT and \
                 self.controller.edge_can_connect(ss.parent.id, ss.id, item.parent.id, item.id):
             self._dragEdge.end_socket = item
-            self._dragEdge.start_socket.edges.append(self._dragEdge)
-            self._dragEdge.end_socket.edges.append(self._dragEdge)
             self.controller.edge_connected(self._dragEdge.id)
         else:
             if self._dragEdge is not None:
