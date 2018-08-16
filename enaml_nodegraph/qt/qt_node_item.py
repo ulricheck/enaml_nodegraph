@@ -1,4 +1,4 @@
-from atom.api import Typed, Int, Float, Unicode, Instance, observe
+from atom.api import Typed, Int, Float, Bool, Unicode, Instance, observe
 from enaml.qt import QtCore, QtGui, QtWidgets
 from enaml.qt.QtGui import QFont, QColor
 
@@ -70,6 +70,8 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
     color_title_background = Typed(QtGui.QColor)
     color_background = Typed(QtGui.QColor)
 
+    show_content_inline = Bool(False)
+
     content = Instance(QtNodeContent)
 
     #: A reference to the widget created by the proxy.
@@ -100,6 +102,7 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
         self.set_title_height(d.title_height)
         self.set_padding(d.padding)
 
+        self.set_show_content_inline(d.show_content_inline)
         self.set_content(d.content)
 
         self.set_name(d.name)
@@ -170,6 +173,7 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
         painter.drawPath(path_outline.simplified())
 
     def setup_content(self):
+
         self.widget.content_item = self.content.widget
 
     #--------------------------------------------------------------------------
@@ -216,8 +220,11 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
     def set_color_background(self, color_background):
         self.color_background = QtGui.QColor.fromRgba(color_background.argb)
 
+    def set_show_content_inline(self, show):
+        self.show_content_inline = show
+
     def set_content(self, content):
-        if isinstance(content, NodeContent):
+        if isinstance(content, NodeContent) and self.show_content_inline:
             self.content = content.proxy
             if self.content.is_active:
                 self.setup_content()

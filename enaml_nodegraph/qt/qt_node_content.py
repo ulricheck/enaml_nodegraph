@@ -54,8 +54,10 @@ class QtNodeContent(QtControl, ProxyNodeContent):
     def _observe_content(self, change):
         if self.widget is None:
             return
+        if not self.parent().show_content_inline:
+            return
         content = change['value']
-        if content is not None:
+        if content is not None :
             self.widget.setWidget(content.widget)
             self.set_content_geometry()
         else:

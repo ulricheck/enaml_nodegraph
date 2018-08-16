@@ -1,6 +1,6 @@
 __author__ = 'jack'
 
-from atom.api import Typed, Int, Bool, ForwardTyped, observe, set_default, Signal
+from atom.api import Typed, Int, Bool, ForwardTyped, List, observe, set_default, Signal
 from enaml.core.declarative import d_
 from enaml.colors import ColorMember, parse_color
 from enaml.widgets.control import Control, ProxyControl

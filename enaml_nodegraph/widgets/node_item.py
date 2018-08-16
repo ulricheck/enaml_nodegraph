@@ -1,5 +1,5 @@
 from atom.api import (
-    Atom, Int, Float, Unicode, Str, Typed, List, Instance, ForwardTyped, observe
+    Atom, Bool, Int, Float, Unicode, Str, Typed, List, Instance, ForwardTyped, observe
 )
 
 from enaml.core.declarative import d_
@@ -78,6 +78,8 @@ class NodeItem(GraphicsItem):
     color_title_background = d_(ColorMember("#313131FF"))
     color_background = d_(ColorMember("#212121E3"))
 
+    show_content_inline = d_(Bool(False))
+
     #: optional Node Content
     content = Instance(NodeContent)
     input_sockets = List(NodeSocket)
@@ -133,7 +135,8 @@ class NodeItem(GraphicsItem):
 
     @observe('id', 'name', 'width', 'height', 'edge_size', 'title_height',
              'padding', 'color_default', 'color_selected', 'color_title',
-             'color_title_background', 'color_background', 'content')
+             'color_title_background', 'color_background', 'show_content_inline',
+             'content')
     def _update_proxy(self, change):
         """ An observer which sends state change to the proxy.
 
@@ -157,3 +160,8 @@ class NodeItem(GraphicsItem):
     def set_position(self, pos):
         self.position = pos
         self.proxy.set_position(pos)
+
+    def getContentView(self):
+        if not self.show_content_inline and self.content is not None:
+            return self.content.content_objects[:]
+        return []

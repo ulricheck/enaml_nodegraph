@@ -1,19 +1,23 @@
 import logging
-
 import networkx as nx
 
 import enaml
 from enaml.qt.qt_application import QtApplication
 
-from atom.api import Int, Enum, Instance, Property, Event, ForwardInstance, observe
+from atom.api import (Atom, AtomMeta, Bool, Int, Enum, Str, Unicode, ContainerList, List, Dict, Typed,
+                      Instance, Property, Event, ForwardInstance, observe)
 
 from enaml_nodegraph.controller import GraphControllerBase
+from enaml_nodegraph.widgets.node_item import NodeItem
 from enaml_nodegraph import model
 
 with enaml.imports():
     from graph_calculator_view import Main
     from graph_item_widgets import (NumberInput, SliderInput, RampGenerator, BinaryOperator,
                                     NumberOutput, GraphOutput, Edge)
+    from graph_item_widgets import (NumberInputEditor, SliderInputEditor,
+                                    RampGeneratorEditor, BinaryOperatorEditor,
+                                    NumberOutputEditor, GraphOutputEditor)
 
 log = logging.getLogger(__name__)
 
@@ -60,12 +64,62 @@ class InputSocket(model.Socket):
 
 
 class NumberInputModel(model.Node):
-    value = Int()
+
+    def _default_attributes(self):
+        attrs = {'value': Int()}
+        return type("NumberInputAttributes", (model.Attributes,), attrs)()
 
     def _default_outputs(self):
         return [OutputSocket(name="value", data_type="int")]
 
-    def _observe_value(self, change):
+    @observe("attributes.value")
+    def _handle_value_change(self, change):
+        if self.graph is not None:
+            self.graph.valuesChanged()
+
+    def update(self):
+        self.output_dict['value'].propagate_change(self.attributes.value)
+
+
+class SliderInputModel(model.Node):
+
+    def _default_attributes(self):
+        attrs = {'value': Int(),
+                 'min_value': Int(),
+                 'max_value': Int(),
+                 'step': Int(),
+                 }
+        return type("SliderInputAttributes", (model.Attributes,), attrs)()
+
+    def _default_outputs(self):
+        return [OutputSocket(name="value", data_type="int")]
+
+    @observe("attributes.value")
+    def _handle_value_change(self, change):
+        if self.graph is not None:
+            self.graph.valuesChanged()
+
+    def update(self):
+        self.output_dict['value'].propagate_change(self.attributes.value)
+
+
+class RampGeneratorModel(model.Node):
+
+    value = Int()
+
+    def _default_attributes(self):
+        attrs = {'is_running': Bool(),
+                 'interval': Int(),
+                 'min_value': Int(),
+                 'max_value': Int()
+                 }
+        return type("RampGeneratorAttributes", (model.Attributes,), attrs)()
+
+    def _default_outputs(self):
+        return [OutputSocket(name="value", data_type="int")]
+
+    @observe("value")
+    def _handle_value_change(self, change):
         if self.graph is not None:
             self.graph.valuesChanged()
 
@@ -74,13 +128,36 @@ class NumberInputModel(model.Node):
 
 
 class NumberOutputModel(model.Node):
-    value = Int()
+
+    def _default_attributes(self):
+        attrs = {'value': Int()}
+        return type("NumberOutputAttributes", (model.Attributes,), attrs)()
 
     def _default_inputs(self):
         return [InputSocket(name="value", degree=1, data_type="int")]
 
     def set_value(self, key, value):
-        setattr(self, key, value)
+        setattr(self.attributes, key, value)
+
+    def update(self):
+        pass
+
+
+class GraphOutputModel(model.Node):
+
+    def _default_attributes(self):
+        attrs = {'values': List(Int()),
+                 'max_entries': Int()}
+        return type("GraphOutputAttributes", (model.Attributes,), attrs)()
+
+    def _default_inputs(self):
+        return [InputSocket(name="value", degree=1, data_type="int")]
+
+    def set_value(self, key, value):
+        start_idx = max(0, len(self.attributes.values)-self.attributes.max_entries+1)
+        val = self.attributes.values[start_idx:]
+        val.append(value)
+        self.attributes.values = val
 
     def update(self):
         pass
@@ -88,7 +165,10 @@ class NumberOutputModel(model.Node):
 
 class BinaryOperatorModel(model.Node):
 
-    operator = Enum('add', 'sub', 'mul', 'div')
+    def _default_attributes(self):
+        attrs = {'operator': Enum('add', 'sub', 'mul', 'div')}
+        return type("BinaryOperatorAttributes", (model.Attributes,), attrs)()
+
     in1 = Int()
     in2 = Int()
 
@@ -104,54 +184,95 @@ class BinaryOperatorModel(model.Node):
     def set_value(self, key, value):
         setattr(self, key, value)
 
-    def _observe_operator(self, change):
+    @observe("attributes.operator")
+    def _handle_operator_change(self, change):
         if self.graph is not None:
             self.graph.valuesChanged()
 
     def update(self):
-        if self.operator == 'add':
+        op = self.attributes.operator
+        if op == 'add':
             self.result = self.in1 + self.in2
-        elif self.operator == 'sub':
+        elif op == 'sub':
             self.result = self.in1 - self.in2
-        elif self.operator == 'mul':
+        elif op == 'mul':
             self.result = self.in1 * self.in2
-        elif self.operator == 'div':
+        elif op == 'div':
             try:
                 self.result = int(self.in1 / self.in2)
             except Exception as e:
                 log.error(e)
         else:
-            log.warning("invalid operator: %s" % self.operator)
+            log.warning("invalid operator: %s" % op)
         self.output_dict['result'].propagate_change(self.result)
 
 
-node_type_map = {'number_input': (NumberInput, NumberInputModel),
-                 'slider_input': (SliderInput, NumberInputModel),
-                 'ramp_generator': (RampGenerator, NumberInputModel),
-                 'binary_operator': (BinaryOperator, BinaryOperatorModel),
-                 'number_output': (NumberOutput, NumberOutputModel),
-                 'graph_output': (GraphOutput, NumberOutputModel),
-                 }
+class TypeElement(Atom):
+    id = Str()
+    name = Unicode()
+    widget_class = Typed(AtomMeta)
+    model_class = Typed(AtomMeta)
 
-edge_type_map = {'default': (Edge, model.Edge)}
+
+class NodeType(TypeElement):
+    editor_class = Typed(AtomMeta)
+
+
+class EdgeType(TypeElement):
+    pass
+
+
+class TypeRegistry(Atom):
+    node_types = ContainerList(NodeType)
+    edge_types = ContainerList(EdgeType)
+
+    node_type_name_map = Dict()
+    edge_type_name_map = Dict()
+
+    node_widget_class_name_map = Dict()
+    edge_widget_class_name_map = Dict()
+
+    def _observe_node_types(self, change):
+        self.node_type_name_map = {v.id: v for v in self.node_types}
+        self.node_widget_class_name_map = {v.widget_class: v.id for v in self.node_types}
+
+    def _observe_edge_types(self, change):
+        self.edge_type_name_map = {v.id: v for v in self.edge_types}
+        self.edge_widget_class_name_map = {v.widget_class: v.id for v in self.edge_types}
+
+    def register_node_type(self, node_type):
+        self.node_types.append(node_type)
+
+    def register_edge_type(self, edge_type):
+        self.edge_types.append(edge_type)
 
 
 class CalculatorGraphController(GraphControllerBase):
 
+    registry = Typed(TypeRegistry)
     graph = Instance(ExecutableGraph)
+
+    selectedNodes = List(NodeItem)
+
+    def _default_registry(self):
+        return TypeRegistry()
 
     def _default_graph(self):
         return ExecutableGraph(controller=self)
+
+    @observe('view.selectedItems')
+    def filter_selected_items(self, change):
+        self.selectedNodes = [i for i in change['value'] if isinstance(i, NodeItem)]
 
     def create_node(self, typename, **kw):
         if self.view.scene is None:
             return
 
-        cls, mdl = node_type_map.get(typename, (None, None))
-        if cls is not None:
-            node = mdl()
+        nt = self.registry.node_type_name_map.get(typename, None)
+        if nt is not None:
+            node = nt.model_class()
             kw['model'] = node
-            n = cls(**kw)
+            n = nt.widget_class(**kw)
             self.view.scene.insert_children(None, [n])
             node.id = n.id
             self.graph.nodes.append(node)
@@ -172,11 +293,11 @@ class CalculatorGraphController(GraphControllerBase):
         if self.view.scene is None:
             return
 
-        cls, mdl = edge_type_map.get(typename, (None, None))
-        if cls is not None:
-            edge = mdl()
+        et = self.registry.edge_type_name_map.get(typename, None)
+        if et is not None:
+            edge = et.model_class()
             kw['model'] = edge
-            e = cls(**kw)
+            e = et.widget_class(**kw)
             self.view.scene.insert_children(None, [e])
             edge.id = e.id
             return e
@@ -232,6 +353,43 @@ def test_main():
     app = QtApplication()
 
     controller = CalculatorGraphController()
+
+    controller.registry.register_node_type(NodeType(id='number_input',
+                                                    name='Number Input',
+                                                    widget_class=NumberInput,
+                                                    editor_class=NumberInputEditor,
+                                                    model_class=NumberInputModel))
+    controller.registry.register_node_type(NodeType(id='slider_input',
+                                                    name='Slider Input',
+                                                    widget_class=SliderInput,
+                                                    editor_class=SliderInputEditor,
+                                                    model_class=SliderInputModel))
+    controller.registry.register_node_type(NodeType(id='ramp_generator',
+                                                    name='Ramp Generator',
+                                                    widget_class=RampGenerator,
+                                                    editor_class=RampGeneratorEditor,
+                                                    model_class=RampGeneratorModel))
+    controller.registry.register_node_type(NodeType(id='binary_operator',
+                                                    name='Binary Operator',
+                                                    widget_class=BinaryOperator,
+                                                    editor_class=BinaryOperatorEditor,
+                                                    model_class=BinaryOperatorModel))
+    controller.registry.register_node_type(NodeType(id='number_output',
+                                                    name='Number Output',
+                                                    widget_class=NumberOutput,
+                                                    editor_class=NumberOutputEditor,
+                                                    model_class=NumberOutputModel))
+    controller.registry.register_node_type(NodeType(id='graph_output',
+                                                    name='Graph Output',
+                                                    widget_class=GraphOutput,
+                                                    editor_class=GraphOutputEditor,
+                                                    model_class=GraphOutputModel))
+
+    controller.registry.register_edge_type(EdgeType(id='default',
+                                                    name='Edge',
+                                                    widget_class=Edge,
+                                                    model_class=model.Edge))
+
     view = Main(controller=controller)
     view.show()
 

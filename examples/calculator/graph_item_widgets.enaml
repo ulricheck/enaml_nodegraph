@@ -1,7 +1,8 @@
 from atom.api import Atom, Bool, Int, Float, List, Typed, observe
 
+from enaml.core.api import Looper, Include
 from enaml.widgets.api import (Container, Field, SpinBox, ObjectCombo, Slider,
-                               Timer, Form, Label, CheckBox, MPLCanvas)
+                               Timer, Form, Label, CheckBox, GroupBox, MPLCanvas)
 
 from enaml.layout.api import vbox, hbox, align, spacer, grid
 
@@ -22,6 +23,29 @@ def enum_labels(model, attr):
     return sorted(items)
 
 
+enamldef NodeAttributeEditorPanel(Container):
+    padding = 0
+    attr node_views
+    Looper:
+        iterable << node_views
+        GroupBox:
+            title = loop_item[0]
+            Include:
+                objects << loop_item[1]
+
+
+enamldef NumberInputEditor(Container):
+    attr attributes
+    padding = (0, 0, 0, 0)
+    Form:
+        Label:
+            text = 'Value'
+        SpinBox: sbox:
+            maximum = 1000
+            minimum = 0
+            value >> attributes.value
+
+
 enamldef NumberInput(NodeItem): node:
     color_default = "#0000007F"
     color_selected = "#FFA637FF"
@@ -36,13 +60,19 @@ enamldef NumberInput(NodeItem): node:
         socket_type = SocketType.OUTPUT
         socket_position = SocketPosition.RIGHT_BOTTOM
 
-    NodeContent:
-        Container:
-            padding = (0, 0, 0, 0)
-            SpinBox: sbox:
-                maximum = 1000
-                minimum = 0
-                value >> node.model.value
+
+enamldef SliderInputEditor(Container):
+    attr attributes
+    padding = (0, 0, 0, 0)
+    Form:
+        Label:
+            text = 'Value'
+        Slider: slider:
+            tick_interval = 5
+            maximum = 1000
+            minimum = 1
+            value >> attributes.value
+
 
 enamldef SliderInput(NodeItem): node:
     color_default = "#0000007F"
@@ -58,47 +88,54 @@ enamldef SliderInput(NodeItem): node:
         socket_type = SocketType.OUTPUT
         socket_position = SocketPosition.RIGHT_BOTTOM
 
-    NodeContent:
-        Container:
-            padding = (0, 0, 0, 0)
-            Slider: slider:
-                tick_interval = 5
-                maximum = 1000
-                minimum = 1
-                value >> node.model.value
-
 
 class RampController(Atom):
 
     model = Typed(Atom)
     timer = Typed(Timer)
 
-    is_running = Bool(False)
-    interval = Int(500)
-    min_value = Int(0)
-    max_value = Int(100)
-    value = Int(0)
-
-    def _default_value(self):
-        return self.min_value
-
-    def _observe_is_running(self, change):
+    def control_timer(self, change):
         if change['value']:
             self.timer.start()
         else:
             self.timer.stop()
 
     def reset(self):
-        self.value = self.min_value
+        self.model.value = self.model.attributes.min_value
 
     def step(self):
-        if self.value < self.max_value:
-            self.value += 1
+        if self.model.value < self.model.attributes.max_value:
+            self.model.value += 1
         else:
-            self.value = self.min_value
+            self.model.value = self.model.attributes.min_value
 
-    def _observe_value(self, change):
-        self.model.value = self.value
+
+enamldef RampGeneratorEditor(Container):
+    attr attributes
+    padding = (0, 0, 0, 0)
+    Form:
+        Label:
+            text = 'Running'
+        CheckBox: cb_running:
+            checked := attributes.is_running
+        Label:
+            text = 'Interval'
+        SpinBox: n_interval:
+            maximum = 1000
+            minimum = 50
+            value := attributes.interval
+        Label:
+            text = 'Min Value'
+        SpinBox: n_min_value:
+            maximum = 1000
+            minimum = 0
+            value := attributes.min_value
+        Label:
+            text = 'Max Value'
+        SpinBox: n_max_value:
+            maximum = 1000
+            minimum = 0
+            value := attributes.max_value
 
 
 enamldef RampGenerator(NodeItem): node:
@@ -107,8 +144,14 @@ enamldef RampGenerator(NodeItem): node:
     color_title = "#AAAAAAFF"
     color_title_background = "#313131FF"
     color_background = "#212121E3"
-    width = 200
-    height = 200
+    height = 90
+
+    attr ramp_ctrl = RampController(model=node.model, timer=t_shoot)
+    initialized :: model.attributes.observe('is_running', ramp_ctrl.control_timer)
+
+    Timer: t_shoot:
+        interval := node.model.attributes.interval
+        timeout :: ramp_ctrl.step()
 
     NodeSocket:
         index = 0
@@ -116,36 +159,16 @@ enamldef RampGenerator(NodeItem): node:
         socket_type = SocketType.OUTPUT
         socket_position = SocketPosition.RIGHT_BOTTOM
 
-    NodeContent:
-        Container:
-            padding = (0, 0, 0, 0)
-            attr ramp_ctrl = RampController(model=node.model, timer=t_shoot)
-            Form:
-                Label:
-                    text = 'Running'
-                CheckBox: cb_running:
-                    checked := ramp_ctrl.is_running
-                Label:
-                    text = 'Interval'
-                SpinBox: n_interval:
-                    maximum = 1000
-                    minimum = 50
-                    value := ramp_ctrl.interval
-                Label:
-                    text = 'Min Value'
-                SpinBox: n_min_value:
-                    maximum = 1000
-                    minimum = 0
-                    value := ramp_ctrl.min_value
-                Label:
-                    text = 'Max Value'
-                SpinBox: n_max_value:
-                    maximum = 1000
-                    minimum = 0
-                    value := ramp_ctrl.max_value
-                Timer: t_shoot:
-                    interval := ramp_ctrl.interval
-                    timeout :: ramp_ctrl.step()
+
+enamldef NumberOutputEditor(Container):
+    attr attributes
+    padding = (0, 0, 0, 0)
+    Form:
+        Label:
+            text = 'Value'
+        Field: display:
+            read_only = True
+            text << str(attributes.value)
 
 
 enamldef NumberOutput(NodeItem): node:
@@ -162,12 +185,17 @@ enamldef NumberOutput(NodeItem): node:
         socket_type = SocketType.INPUT
         socket_position = SocketPosition.LEFT_TOP
 
-    NodeContent:
-        Container:
-            padding = (0, 0, 0, 0)
-            Field: display:
-                read_only = True
-                text << str(node.model.value)
+
+enamldef BinaryOperatorEditor(Container):
+    attr attributes
+    padding = (0, 0, 0, 0)
+    Form:
+        Label:
+            text = 'Operator'
+        ObjectCombo: operator:
+            items = enum_labels(attributes, "operator")
+            selected := attributes.operator
+
 
 enamldef BinaryOperator(NodeItem): node:
     color_default = "#0000007F"
@@ -194,23 +222,11 @@ enamldef BinaryOperator(NodeItem): node:
         socket_type = SocketType.OUTPUT
         socket_position = SocketPosition.RIGHT_TOP
 
-    NodeContent:
-        Container:
-            padding = (0, 0, 0, 0)
-            ObjectCombo: operator:
-                items = enum_labels(node.model, "operator")
-                selected := node.model.operator
-
 
 class FigureRenderer(Atom):
 
-    model = Typed(Atom)
-
     figure = Typed(plt.Figure)
     line = Typed(plt.Line2D)
-
-    max_entries = Int(500)
-    values = List(Int())
 
     def _default_figure(self):
         return plt.Figure()
@@ -218,13 +234,7 @@ class FigureRenderer(Atom):
     def _default_line(self):
         return self.figure.add_subplot(111).plot([],[])[0]
 
-    def consume_value(self, change):
-        start_idx = max(0, len(self.values)-self.max_entries+1)
-        val = self.values[start_idx:]
-        val.append(change['value'])
-        self.values = val
-
-    def _observe_values(self, change):
+    def redraw_figure(self, change):
         values = np.array(change['value'])
         l = len(values)
         if l > 0:
@@ -239,43 +249,43 @@ class FigureRenderer(Atom):
             self.figure.canvas.flush_events()
 
 
+enamldef GraphOutputEditor(Container):
+    attr attributes
+    padding = (0, 0, 0, 0)
+    attr fig_ctrl = FigureRenderer()
+    initialized :: attributes.observe('values', fig_ctrl.redraw_figure)
+
+    Container:
+        padding = (0, 0, 0, 0)
+        constraints = [
+            vbox(frm, canvas),
+            canvas.width <= 250,
+            canvas.height <= 200,
+        ]
+        Form: frm:
+            Label:
+                text = 'Max Entries'
+            SpinBox: n_max_entries:
+                maximum = 1000
+                minimum = 1
+                value := attributes.max_entries
+        MPLCanvas: canvas:
+            figure << fig_ctrl.figure
+
+
 enamldef GraphOutput(NodeItem): node:
     color_default = "#0000007F"
     color_selected = "#FFA637FF"
     color_title = "#AAAAAAFF"
     color_title_background = "#313131FF"
     color_background = "#212121E3"
-    width = 300
-    height = 300
+    height = 90
 
     NodeSocket:
         index = 0
         id = "value"
         socket_type = SocketType.INPUT
         socket_position = SocketPosition.LEFT_TOP
-
-    NodeContent:
-        Container:
-            padding = (0, 0, 0, 0)
-            attr fig_ctrl = FigureRenderer(model=node.model)
-            initialized :: node.model.observe('value', fig_ctrl.consume_value)
-
-            Container:
-                padding = (0, 0, 0, 0)
-                constraints = [
-                    vbox(frm, canvas),
-                    canvas.width <= 250,
-                    canvas.height <= 200,
-                ]
-                Form: frm:
-                    Label:
-                        text = 'Max Entries'
-                    SpinBox: n_max_entries:
-                        maximum = 1000
-                        minimum = 1
-                        value := fig_ctrl.max_entries
-                MPLCanvas: canvas:
-                    figure << fig_ctrl.figure
 
 
 enamldef Edge(EdgeItem):

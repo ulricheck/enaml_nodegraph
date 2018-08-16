@@ -1,10 +1,12 @@
-from atom.api import Atom, List, Dict, Int, Str, ForwardInstance, Typed, Instance, observe, IntEnum
+from atom.api import Str, ForwardInstance, Typed, IntEnum
 
 from .base import GraphItem
+
 
 def import_socket_type():
     from .socket import Socket
     return Socket
+
 
 def import_graph_type():
     from .graph import Graph
@@ -50,7 +52,6 @@ class Edge(GraphItem):
     @property
     def data_type(self):
         return getattr(self.start_socket, "data_type", getattr(self.end_socket, "data_type", ""))
-
 
     @property
     def is_open(self):

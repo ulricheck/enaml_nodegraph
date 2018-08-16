@@ -1,18 +1,23 @@
 from enaml_nodegraph import install
 install()
 
-from enaml.widgets.api import MainWindow, Window, Container, Field
-from enaml.layout.api import vbox, hbox, align, spacer, grid
-from enaml.widgets.api import MenuBar, Menu, Action, ActionGroup
-from enaml.widgets.api import DockPane
+from enaml.core.api import Looper
+from enaml.core.api import Include
+from enaml.layout.api import (vbox, hbox, align, spacer, grid,
+                              AreaLayout, HSplitLayout, VSplitLayout, TabLayout, InsertItem)
+
+from enaml.widgets.api import MainWindow, Window, Container, Field, Label
+from enaml.widgets.api import MenuBar, Menu, Action, ActionGroup, PushButton
+from enaml.widgets.api import DockPane, DockArea, DockItem
+from enaml.widgets.ipython_console import IPythonConsole
 
 from enaml.stdlib.message_box import question
 
-from enaml.widgets.ipython_console import IPythonConsole
 
 from enaml_nodegraph.widgets.graphicsview import GraphicsView
 from enaml_nodegraph.widgets.node_graphicsscene import NodeGraphicsScene
 
+from graph_item_widgets import NodeAttributeEditorPanel
 
 def confirm_close(window, event):
     button = question(
@@ -48,6 +53,20 @@ enamldef DebugConsole(Window):
             initial_ns = {"view": view, "scene": scene}
 
 
+def getAttributeEditorView(controller, selectedNodes, parent):
+    if len(selectedNodes) == 0:
+        return [Label(text='Nothing Selected')]
+
+    node_views = []
+    for node in selectedNodes:
+        typename = controller.registry.node_widget_class_name_map.get(type(node), None)
+        if typename is None:
+            continue
+        view_cls = controller.registry.node_type_name_map[typename].editor_class
+        node_views.append([node.name, [view_cls(attributes=node.model.attributes)]])
+
+    return [NodeAttributeEditorPanel(node_views=node_views)]
+
 
 enamldef Main(MainWindow): mainwindow:
 
@@ -79,33 +98,52 @@ enamldef Main(MainWindow): mainwindow:
 
         Menu:
             title = '&Nodes'
-            Action:
-                text = 'Add NumberInput\tCtrl+1'
-                triggered :: controller.create_node("number_input")
-            Action:
-                text = 'Add SliderInput\tCtrl+2'
-                triggered :: controller.create_node("slider_input")
-            Action:
-                text = 'Add RampGenerator\tCtrl+3'
-                triggered :: controller.create_node("ramp_generator")
-            Action:
-                text = 'Add BinaryOperator\tCtrl+4'
-                triggered :: controller.create_node("binary_operator")
-            Action:
-                text = 'Add NumberOutput\tCtrl+5'
-                triggered :: controller.create_node("number_output")
-            Action:
-                text = 'Add GraphOutput\tCtrl+6'
-                triggered :: controller.create_node("graph_output")
+            Looper: menu_looper:
+                iterable << controller.registry.node_types
+                Action:
+                    text = 'Add %s\tCtrl+%d' % (loop_item.name, loop_index+1)
+                    triggered :: controller.create_node(loop_item.id)
 
     Container: gvc:
-        padding = (0, 0, 0, 0)
-        alias view1
-        constraints = [vbox(view1, spacing=3)]
+        padding = 0
+        DockArea:
+            layout = AreaLayout(
+                HSplitLayout(
+                    'node-editor-view',
+                    VSplitLayout('create-node-view',
+                                 'item-attribute-view',
+                                 sizes=[1,1]),
+                    sizes=[3, 1],
+                ),
+            )
+            DockItem:
+                name = 'node-editor-view'
+                title = 'NodeGraph Editor'
+                stretch = 1
+                Container:
+                    padding = 0
+                    minimum_size = (800, 600)
+                    GraphicsView: view1:
+                        controller = mainwindow.controller
+                        NodeGraphicsScene: scene:
+                            background = "#393939"
+                            color_light = "#2f2f2f"
+                            color_dark = "#292929"
+            DockItem:
+                name = 'create-node-view'
+                title = 'Create Node'
+                stretch = 1
+                Container:
+                    Looper: button_looper:
+                        iterable << controller.registry.node_types
+                        PushButton:
+                            text = loop_item.name
+                            clicked :: controller.create_node(loop_item.id)
 
-        GraphicsView: view1:
-            controller = mainwindow.controller
-            NodeGraphicsScene: scene:
-                background = "#393939"
-                color_light = "#2f2f2f"
-                color_dark = "#292929"
+            DockItem: iav_item:
+                name = 'item-attribute-view'
+                title = 'Attribute Editor'
+                stretch = 1
+                Container: iav_container:
+                    Include: attr_editor_inc:
+                        objects << getAttributeEditorView(controller, controller.selectedNodes, iav_container)

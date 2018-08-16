@@ -1,7 +1,8 @@
-from atom.api import Unicode, Dict, Property, Str, ContainerList, ForwardTyped
+from atom.api import Unicode, Property, Str, ContainerList, ForwardTyped
 
 from .socket import Socket, SocketType
 from .base import GraphItem
+
 
 def import_graph_type():
     from .graph import Graph

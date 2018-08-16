@@ -1,3 +1,4 @@
+from .base import GraphItem, Attributes
 from .edge import Edge, EdgeType
 from .node import Node
 from .graph import Graph
