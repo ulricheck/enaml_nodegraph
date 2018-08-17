@@ -2,7 +2,7 @@ from atom.api import Atom, Bool, Int, Float, List, Typed, observe
 
 from enaml.core.api import Looper, Include
 from enaml.widgets.api import (Container, Field, SpinBox, ObjectCombo, Slider,
-                               Timer, Form, Label, CheckBox, GroupBox, MPLCanvas,
+                               Timer, Form, Label, CheckBox, MPLCanvas,
                                Menu, Action)
 
 from enaml.layout.api import vbox, hbox, align, spacer, grid
@@ -38,17 +38,6 @@ enamldef EdgePopupMenu(Menu):
     Action:
         text = 'Delete Edge'
         triggered :: edge.destroy()
-
-
-enamldef NodeAttributeEditorPanel(Container):
-    padding = 0
-    attr node_views
-    Looper:
-        iterable << node_views
-        GroupBox:
-            title = loop_item[0]
-            Include:
-                objects << loop_item[1]
 
 
 enamldef NumberInputEditor(Container):
@@ -119,6 +108,10 @@ class RampController(Atom):
         else:
             self.timer.stop()
 
+    def teardown(self, change):
+        if not change['value']:
+            self.timer.stop()
+
     def reset(self):
         self.model.value = self.model.attributes.min_value
 
@@ -166,7 +159,9 @@ enamldef RampGenerator(NodeItem): node:
 
     attr ramp_ctrl = RampController(model=node.model, timer=t_shoot)
 
-    initialized :: model.attributes.observe('is_running', ramp_ctrl.control_timer)
+    initialized ::
+        model.attributes.observe('is_running', ramp_ctrl.control_timer)
+        controller.observe('is_active', ramp_ctrl.teardown)
 
     context_menu_event :: NodePopupMenu(node=node).popup()
 

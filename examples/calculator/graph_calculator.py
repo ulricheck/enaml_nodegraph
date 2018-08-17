@@ -249,6 +249,8 @@ class TypeRegistry(Atom):
 
 class CalculatorGraphController(GraphControllerBase):
 
+    is_active = Bool(False)
+
     registry = Typed(TypeRegistry)
     graph = Instance(ExecutableGraph)
 

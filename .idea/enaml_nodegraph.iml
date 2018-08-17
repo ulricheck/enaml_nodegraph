@@ -7,7 +7,7 @@
     <orderEntry type="module" module-name="enaml_opengl" />
     <orderEntry type="module" module-name="enaml" />
     <orderEntry type="module" module-name="atom" />
-    <orderEntry type="module" module-name="pyqt-node-editor-tutorials" />
+    <orderEntry type="module" module-name="enaml_data" />
   </component>
   <component name="TestRunnerService">
     <option name="PROJECT_TEST_RUNNER" value="Unittests" />

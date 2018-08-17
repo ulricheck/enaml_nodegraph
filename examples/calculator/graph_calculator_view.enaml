@@ -1,23 +1,26 @@
 from enaml_nodegraph import install
 install()
 
-from enaml.core.api import Looper
-from enaml.core.api import Include
+import json
+
+from atom.api import Dict
+
+from enaml.core.api import Looper, Include
 from enaml.layout.api import (vbox, hbox, align, spacer, grid,
                               AreaLayout, HSplitLayout, VSplitLayout, TabLayout, InsertItem)
-
-from enaml.widgets.api import MainWindow, Window, Container, Field, Label
-from enaml.widgets.api import MenuBar, Menu, Action, ActionGroup, PushButton
-from enaml.widgets.api import DockPane, DockArea, DockItem
-from enaml.widgets.ipython_console import IPythonConsole
-
+from enaml.styling import StyleSheet, Style, Setter
+from enaml.drag_drop import DragData, DropAction
 from enaml.stdlib.message_box import question
 
+from enaml.widgets.api import MainWindow, Window, Container, Field, Label, GroupBox
+from enaml.widgets.api import MenuBar, Menu, Action, ActionGroup, PushButton
+from enaml.widgets.api import DockPane, DockArea, DockItem, Feature
+from enaml.widgets.ipython_console import IPythonConsole
 
+from enaml_nodegraph.primitives import Point2D
 from enaml_nodegraph.widgets.graphicsview import GraphicsView
 from enaml_nodegraph.widgets.node_graphicsscene import NodeGraphicsScene
 
-from graph_item_widgets import NodeAttributeEditorPanel
 
 def confirm_close(window, event):
     button = question(
@@ -39,6 +42,46 @@ def deleteSelectedItems(controller, items):
             controller.destroy_edge(item.id)
 
 
+def create_drag_data(data):
+    drag = DragData()
+    drag.supported_actions = DropAction.Copy
+    drag.mime_data.set_data('text/json', data)
+    return drag
+
+
+
+enamldef GraphEditorStyleSheet(StyleSheet):
+    Style:
+        element = 'Label'
+        style_class = 'node-template'
+        Setter:
+            field = 'background'
+            value = ('lineargradient(x1: 0, y1:0, x2:0, y2:1, '
+                     'stop: 0 #222222, stop: 0.5 #1A1A1A, stop: 1 #111111)')
+        Setter:
+            field = 'color'
+            value = '#FFFFEF'
+        Setter:
+            field = 'padding'
+            value = '5px'
+        Setter:
+            field = 'border-radius'
+            value = '5px'
+        Setter:
+            field = 'font'
+            value = '12pt Verdana'
+
+enamldef NodeTemplate(Label):
+    attr data: bytes
+    attr success = False
+    style_class = 'node-template'
+    features = Feature.DragEnabled
+    drag_start => ():
+        return create_drag_data(data)
+    drag_end => (drag_data, result):
+        self.success = result == DropAction.Copy
+
+
 enamldef DebugConsole(Window):
     attr view
     attr scene
@@ -51,6 +94,17 @@ enamldef DebugConsole(Window):
 
         IPythonConsole: ipy:
             initial_ns = {"view": view, "scene": scene}
+
+
+enamldef NodeAttributeEditorPanel(Container):
+    padding = 0
+    attr node_views
+    Looper:
+        iterable << node_views
+        GroupBox:
+            title = loop_item[0]
+            Include:
+                objects << loop_item[1]
 
 
 def getAttributeEditorView(controller, selectedNodes, parent):
@@ -69,10 +123,13 @@ def getAttributeEditorView(controller, selectedNodes, parent):
 
 
 enamldef Main(MainWindow): mainwindow:
+    GraphEditorStyleSheet:
+        pass
 
     attr controller
 
     title = 'Nodegraph Test'
+    initialized :: controller.is_active = True
     closing :: confirm_close(self, change['value'])
 
 
@@ -110,7 +167,7 @@ enamldef Main(MainWindow): mainwindow:
             layout = AreaLayout(
                 HSplitLayout(
                     'node-editor-view',
-                    VSplitLayout('create-node-view',
+                    VSplitLayout('drag-node-view',
                                  'item-attribute-view',
                                  sizes=[1,1]),
                     sizes=[3, 1],
@@ -125,20 +182,35 @@ enamldef Main(MainWindow): mainwindow:
                     minimum_size = (800, 600)
                     GraphicsView: view1:
                         controller = mainwindow.controller
+
+                        features = Feature.DropEnabled
+                        drag_enter => (event):
+                            if event.mime_data().has_format('text/json'):
+                                event.accept_proposed_action()
+                        drop => (event):
+                            try:
+                                info = json.loads(event.mime_data().data('text/json').decode('utf-8'))
+                                if info.get('class') == 'node':
+                                    spos = view1.proxy.widget.mapToScene(event.pos().x, event.pos().y)
+                                    controller.create_node(info['typename'], position=Point2D(x=spos.x(), y=spos.y()))
+                            except Exception as e:
+                                print("Error parsing drag data", e)
+
                         NodeGraphicsScene: scene:
                             background = "#393939"
                             color_light = "#2f2f2f"
                             color_dark = "#292929"
+
             DockItem:
-                name = 'create-node-view'
-                title = 'Create Node'
+                name = 'drag-node-view'
+                title = 'Drag Node'
                 stretch = 1
                 Container:
-                    Looper: button_looper:
+                    Looper: drag_looper:
                         iterable << controller.registry.node_types
-                        PushButton:
+                        NodeTemplate:
                             text = loop_item.name
-                            clicked :: controller.create_node(loop_item.id)
+                            data = bytes(json.dumps({'class':'node', 'typename':loop_item.id}), 'utf-8')
 
             DockItem: iav_item:
                 name = 'item-attribute-view'
