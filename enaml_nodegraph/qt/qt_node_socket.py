@@ -1,10 +1,13 @@
-from atom.api import Unicode, Int, Typed, Float, observe
-from enaml.qt import QtCore, QtGui
+from atom.api import Unicode, Int, Bool, Typed, Float, observe
+from enaml.qt import QtCore, QtGui, QtWidgets
 
 from enaml_nodegraph.widgets.node_socket import ProxyNodeSocket, SocketPosition, SocketType
 
+from enaml.qt.q_resource_helpers import (
+    get_cached_qcolor, get_cached_qfont, get_cached_qimage
+)
+
 from .qt_graphicsitem import QGraphicsItem, QtGraphicsItem
-from .qt_node_item import QtNodeItem
 from enaml_nodegraph.primitives import Point2D
 
 
@@ -50,11 +53,18 @@ class QtNodeSocket(QtGraphicsItem, ProxyNodeSocket):
     radius = Float(6.0)
     outline_width = Float(1.0)
 
+    show_label = Bool(True)
+
     relative_position = Typed(Point2D)
+
+    font_label = Typed(QtGui.QFont)
 
     color_background = Typed(QtGui.QColor)
     color_outline = Typed(QtGui.QColor)
+    color_label = Typed(QtGui.QColor)
+
     pen_outline = Typed(QtGui.QPen)
+    pen_label = Typed(QtGui.QPen)
 
     #: A reference to the widget created by the proxy.
     widget = Typed(QNodeSocket)
@@ -82,19 +92,29 @@ class QtNodeSocket(QtGraphicsItem, ProxyNodeSocket):
         self.set_relative_position(d.compute_socket_position())
         self.set_radius(d.radius)
         self.set_outline_width(d.outline_width)
+        self.set_show_label(d.show_label)
+
+        self.set_font_label(d.font_label)
 
         self.set_color_background(d.color_background)
         self.set_color_outline(d.color_outline)
+        self.set_color_label(d.color_label)
 
 
     #--------------------------------------------------------------------------
     # observers
     #--------------------------------------------------------------------------
     @observe('outline_width', 'color_outline')
-    def _update_style(self, change):
+    def _update_outline_style(self, change):
         if self.color_outline is not None:
             self.pen_outline = QtGui.QPen(self.color_outline)
             self.pen_outline.setWidthF(self.outline_width)
+
+    @observe('color_label')
+    def _update_label_style(self, change):
+        if self.color_label is not None:
+            self.pen_label = QtGui.QPen(self.color_label)
+            self.pen_label.setWidthF(1)
 
     def _observe_position(self, change):
         if self.widget is not None:
@@ -105,10 +125,37 @@ class QtNodeSocket(QtGraphicsItem, ProxyNodeSocket):
     #--------------------------------------------------------------------------
 
     def on_paint(self, painter, style_option, widget=None):
+        lod = style_option.levelOfDetailFromTransform(painter.worldTransform())
+
         # painting circle
         painter.setBrush(self.color_background)
         painter.setPen(self.pen_outline)
         painter.drawEllipse(-self.radius, -self.radius, 2 * self.radius, 2 * self.radius)
+
+        if self.show_label:
+            painter.setFont(self.font_label)
+            painter.setPen(self.pen_label)
+            is_left = self.socket_position in (SocketPosition.LEFT_BOTTOM, SocketPosition.LEFT_TOP)
+
+            alignment = QtCore.Qt.AlignVCenter
+            if is_left:
+                alignment |= QtCore.Qt.AlignLeft
+            else:
+                alignment |= QtCore.Qt.AlignRight
+
+            node = self.parent()
+            width = node.width / 2 - self.radius - self.outline_width
+            height = self.radius * 2
+
+            offset = 2 * self.radius + self.outline_width
+            x = offset if is_left else -width - offset
+            y = -self.radius
+
+            rect = QtCore.QRectF(x, y,
+                                 width,
+                                 height)
+
+            painter.drawText(rect, alignment, self.name)
 
     #--------------------------------------------------------------------------
     # ProxyNodeSocket API
@@ -137,7 +184,20 @@ class QtNodeSocket(QtGraphicsItem, ProxyNodeSocket):
         self.outline_width = outline_width
 
     def set_color_background(self, color_background):
-        self.color_background = QtGui.QColor.fromRgba(color_background.argb)
+        self.color_background = get_cached_qcolor(color_background)
 
     def set_color_outline(self, color_outline):
-        self.color_outline = QtGui.QColor.fromRgba(color_outline.argb)
+        self.color_outline = get_cached_qcolor(color_outline)
+
+    def set_color_label(self, color_label):
+        self.color_label = get_cached_qcolor(color_label)
+
+    def set_font_label(self, font):
+        if font is not None:
+            self.font_label = get_cached_qfont(font)
+        else:
+            self.font_label = QtGui.QFont("Ubuntu", 8)
+        self.font_label.setStyleStrategy(QtGui.QFont.ForceOutline)
+
+    def set_show_label(self, show):
+        self.show_label = show

@@ -1,4 +1,4 @@
-from atom.api import Typed, Int, Float, Bool, Unicode, Instance, observe
+from atom.api import Typed, Int, Float, Bool, Unicode, Instance, Event, observe
 from enaml.qt import QtCore, QtGui, QtWidgets
 from enaml.qt.QtGui import QFont, QColor
 
@@ -20,7 +20,6 @@ class QNodeItem(QGraphicsItem):
         super().__init__(parent)
         self.proxy = proxy
         self.title_item = QtWidgets.QGraphicsTextItem(self)
-        self.title_item.setFont(QFont("Ubuntu", 10))  # @todo: could be configurable as well.
 
     def paint(self, painter, style_option, widget=None):
         self.proxy.on_paint(painter, style_option, widget)
@@ -37,6 +36,9 @@ class QNodeItem(QGraphicsItem):
         if change == QGraphicsItem.ItemPositionHasChanged:
             self.proxy.position = Point2D(x=value.x(), y=value.y())
         return super(QNodeItem, self).itemChange(change, value)
+
+    def contextMenuEvent(self, event):
+        self.proxy.on_context_menu(event)
 
     # @todo: these are expected from toolkitobject - but are not valid for graphics items
     def setObjectName(self, name):
@@ -64,6 +66,7 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
     title_height = Float(24.0)
     padding = Float(4.0)
 
+    font_title = Typed(QtGui.QFont)
     color_default = Typed(QtGui.QColor)
     color_selected = Typed(QtGui.QColor)
     color_title = Typed(QtGui.QColor)
@@ -137,10 +140,20 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
         self.declaration.position = change['value']
 
     #--------------------------------------------------------------------------
+    # Signal Handlers
+    #--------------------------------------------------------------------------
+    def on_context_menu(self, event):
+        """ The signal handler for the 'context_menu' signal.
+
+        """
+        self.declaration.context_menu_event()
+
+    #--------------------------------------------------------------------------
     # Private API
     #--------------------------------------------------------------------------
 
     def on_paint(self, painter, style_option, widget=None):
+        lod = style_option.levelOfDetailFromTransform(painter.worldTransform())
 
         # title
         path_title = QtGui.QPainterPath()
@@ -206,19 +219,27 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
         self.padding = padding
 
     def set_color_default(self, color_default):
-        self.color_default = QtGui.QColor.fromRgba(color_default.argb)
+        self.color_default = get_cached_qcolor(color_default)
 
     def set_color_selected(self, color_selected):
-        self.color_selected = QtGui.QColor.fromRgba(color_selected.argb)
+        self.color_selected = get_cached_qcolor(color_selected)
 
     def set_color_title(self, color_title):
-        self.widget.title_item.setDefaultTextColor(QtGui.QColor.fromRgba(color_title.argb))
+        self.widget.title_item.setDefaultTextColor(get_cached_qcolor(color_title))
 
     def set_color_title_background(self, color_title_background):
-        self.color_title_background = QtGui.QColor.fromRgba(color_title_background.argb)
+        self.color_title_background = get_cached_qcolor(color_title_background)
 
     def set_color_background(self, color_background):
-        self.color_background = QtGui.QColor.fromRgba(color_background.argb)
+        self.color_background = get_cached_qcolor(color_background)
+
+    def set_font_title(self, font):
+        if font is not None:
+            self.font_title = get_cached_qfont(font)
+        else:
+            self.font_title = QtGui.QFont("Ubuntu", 10)
+        self.widget.title_item.setFont(self.font_title)
+
 
     def set_show_content_inline(self, show):
         self.show_content_inline = show

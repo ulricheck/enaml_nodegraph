@@ -1,9 +1,12 @@
+import math
+
 from atom.api import (
-    Atom, Bool, Int, Float, Unicode, Str, Typed, List, Instance, ForwardTyped, observe
+    Atom, Bool, Int, Float, Unicode, Str, Typed, List, Instance, Event, ForwardTyped, observe
 )
 
 from enaml.core.declarative import d_
 from enaml.colors import ColorMember
+from enaml.fonts import FontMember
 
 from .graphicsitem import GraphicsItem, ProxyGraphicsItem
 from .node_content import NodeContent
@@ -64,7 +67,7 @@ class NodeItem(GraphicsItem):
     name = d_(Unicode())
 
     width = d_(Int(180))
-    height = d_(Int(240))
+    height = d_(Int())
     position = d_(Typed(Point2D))
 
     edge_size = d_(Float(10.0))
@@ -74,25 +77,35 @@ class NodeItem(GraphicsItem):
     color_default = d_(ColorMember("#0000007F"))
     color_selected = d_(ColorMember("#FFA637FF"))
 
+    font_title = d_(FontMember('10pt Ubuntu'))
+
     color_title = d_(ColorMember("#AAAAAAFF"))
     color_title_background = d_(ColorMember("#313131FF"))
     color_background = d_(ColorMember("#212121E3"))
 
     show_content_inline = d_(Bool(False))
 
+    #: the model item from the underlying graph structure
+    model = d_(Typed(Atom))
+
+    context_menu_event = d_(Event())
+
     #: optional Node Content
     content = Instance(NodeContent)
     input_sockets = List(NodeSocket)
     output_sockets = List(NodeSocket)
 
-    #: the model item from the underlying graph structure
-    model = d_(Typed(Atom))
 
     #: A reference to the ProxyComboBox object.
     proxy = Typed(ProxyNodeItem)
 
     def _default_position(self):
         return Point2D(x=0, y=0)
+
+    def _default_height(self):
+        socket_space = max(sum(s.socket_spacing for s in self.input_sockets),
+                           sum(s.socket_spacing for s in self.output_sockets))
+        return math.ceil(self.title_height + 2 * self.padding + 2 * self.edge_size + socket_space)
 
     def _default_id(self):
         if self.scene is not None:

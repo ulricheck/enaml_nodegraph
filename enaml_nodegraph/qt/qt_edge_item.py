@@ -21,6 +21,8 @@ class QEdgeItem(QGraphicsPathItem):
         self.proxy = proxy
 
     def paint(self, painter, style_option, widget=None):
+        lod = style_option.levelOfDetailFromTransform(painter.worldTransform())
+
         self.setPath(self.calcPath())
 
         if self.proxy.end_socket is None:
@@ -88,6 +90,9 @@ class QEdgeItem(QGraphicsPathItem):
     def deleteLater(self):
         pass
 
+    def contextMenuEvent(self, event):
+        self.proxy.on_context_menu(event)
+
 
 class QtEdgeItem(QtGraphicsItem, ProxyEdgeItem):
     """ A Qt implementation of an Enaml EdgeItem.
@@ -148,6 +153,15 @@ class QtEdgeItem(QtGraphicsItem, ProxyEdgeItem):
     #--------------------------------------------------------------------------
 
     #--------------------------------------------------------------------------
+    # Signal Handlers
+    #--------------------------------------------------------------------------
+    def on_context_menu(self, event):
+        """ The signal handler for the 'context_menu' signal.
+
+        """
+        self.declaration.context_menu_event()
+
+    #--------------------------------------------------------------------------
     # Private API
     #--------------------------------------------------------------------------
 
@@ -167,7 +181,7 @@ class QtEdgeItem(QtGraphicsItem, ProxyEdgeItem):
         self.edge_roundness = edge_roundness
 
     def set_color_default(self, color_default):
-        self.color_default = QtGui.QColor.fromRgba(color_default.argb)
+        self.color_default = get_cached_qcolor(color_default)
         self.pen_default = QtGui.QPen(self.color_default)
         self.pen_default.setWidthF(self.line_width)
 
@@ -176,7 +190,7 @@ class QtEdgeItem(QtGraphicsItem, ProxyEdgeItem):
         self.pen_dragging.setWidthF(self.line_width)
 
     def set_color_selected(self, color_selected):
-        self.color_selected = QtGui.QColor.fromRgba(color_selected.argb)
+        self.color_selected = get_cached_qcolor(color_selected)
         self.pen_selected = QtGui.QPen(self.color_selected)
         self.pen_selected.setWidthF(2.0)
 

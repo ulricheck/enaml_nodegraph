@@ -1,5 +1,5 @@
 from atom.api import (
-    Atom, Int, Float, Unicode, Str, Typed, IntEnum, ForwardTyped, ForwardInstance, observe
+    Atom, Int, Float, Unicode, Str, Typed, IntEnum, ForwardTyped, ForwardInstance, Event, observe
 )
 
 from enaml.core.declarative import d_
@@ -71,6 +71,8 @@ class EdgeItem(GraphicsItem):
 
     #: A reference to the ProxyComboBox object.
     proxy = Typed(ProxyEdgeItem)
+
+    context_menu_event = d_(Event())
 
     def _default_id(self):
         if self.scene is not None:

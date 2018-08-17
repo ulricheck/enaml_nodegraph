@@ -1,9 +1,10 @@
 from atom.api import (
-    Int, Float, Unicode, Typed, Str, ContainerList, IntEnum, ForwardTyped, Property, observe
+    Int, Float, Bool, Unicode, Typed, Str, ContainerList, IntEnum, ForwardTyped, Property, observe
 )
 
 from enaml.core.declarative import d_
 from enaml.colors import ColorMember
+from enaml.fonts import FontMember
 
 from .graphicsitem import GraphicsItem, ProxyGraphicsItem
 from .edge_item import EdgeItem
@@ -72,8 +73,13 @@ class NodeSocket(GraphicsItem):
     radius = d_(Float(6.0))
     outline_width = d_(Float(1.0))
 
+    font_label = d_(FontMember('10pt Ubuntu'))
+
+    color_label = d_(ColorMember("#AAAAAAFF"))
     color_background = d_(ColorMember("#FF7700FF"))
     color_outline = d_(ColorMember("#000000FF"))
+
+    show_label = d_(Bool(True))
 
     relative_position = Typed(Point2D)
     edges = ContainerList(EdgeItem)
