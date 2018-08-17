@@ -6,7 +6,7 @@ from enaml.layout.api import vbox, hbox, align, spacer, grid
 from enaml.widgets.api import MenuBar, Menu, Action, ActionGroup
 from enaml.widgets.api import DockPane
 
-from enaml.layout.api import HSplitLayout, AreaLayout, DockBarLayout
+from enaml.layout.api import HSplitLayout, AreaLayout, DockBarLayout
 from enaml.widgets.api import DockArea, DockItem
 
 
