@@ -1,4 +1,4 @@
-from atom.api import Atom, Bool, Int, Float, List, Typed, observe
+from atom.api import Atom, Bool, Int, Float, Str, List, Typed, observe
 
 from enaml.core.api import Looper, Include
 from enaml.widgets.api import (Container, Field, SpinBox, ObjectCombo, Slider,
@@ -14,6 +14,15 @@ from enaml_nodegraph.widgets.node_item import NodeItem
 from enaml_nodegraph.widgets.node_content import NodeContent
 from enaml_nodegraph.widgets.node_socket import NodeSocket, SocketPosition, SocketType
 from enaml_nodegraph.widgets.edge_item import EdgeItem, EdgeType
+
+from .autoform import AutoForm
+
+
+TYPE_COLOR_MAP = {
+    'int': "#0077FFFF",
+    'float': "#FF7700FF",
+    'text': "#FF0077FF",
+}
 
 
 def enum_labels(model, attr):
@@ -40,61 +49,43 @@ enamldef EdgePopupMenu(Menu):
         triggered :: edge.destroy()
 
 
-enamldef NumberInputEditor(Container):
-    attr attributes
-    padding = (0, 0, 0, 0)
-    Form:
-        Label:
-            text = 'Value'
-        SpinBox: sbox:
-            maximum = 1000
-            minimum = 0
-            value >> attributes.value
-
-
-enamldef NumberInput(NodeItem): node:
+enamldef AutoNode(NodeItem): node:
     color_default = "#0000007F"
     color_selected = "#FFA637FF"
     color_title = "#AAAAAAFF"
     color_title_background = "#313131FF"
     color_background = "#212121E3"
+    attr type_name : Str
 
     context_menu_event :: NodePopupMenu(node=node).popup()
+    Looper:
+        iterable << node.model.outputs
+        NodeSocket:
+            index = loop_index
+            id = loop_item.name
+            color_background = TYPE_COLOR_MAP[loop_item.data_type]
+            socket_type = SocketType.OUTPUT
+            socket_position = SocketPosition.RIGHT_BOTTOM
 
-    NodeSocket:
-        index = 0
-        id = "value"
-        socket_type = SocketType.OUTPUT
-        socket_position = SocketPosition.RIGHT_BOTTOM
+    Looper:
+        iterable << node.model.inputs
+        NodeSocket:
+            index = loop_index
+            id = loop_item.name
+            color_background = TYPE_COLOR_MAP[loop_item.data_type]
+            socket_type = SocketType.INPUT
+            socket_position = SocketPosition.LEFT_TOP
+
+class InputNode(AutoNode):
+    pass
 
 
-enamldef SliderInputEditor(Container):
+enamldef InputEditor(Container):
     attr attributes
     padding = (0, 0, 0, 0)
-    Form:
-        Label:
-            text = 'Value'
-        Slider: slider:
-            tick_interval = 5
-            maximum = 1000
-            minimum = 1
-            value >> attributes.value
-
-
-enamldef SliderInput(NodeItem): node:
-    color_default = "#0000007F"
-    color_selected = "#FFA637FF"
-    color_title = "#AAAAAAFF"
-    color_title_background = "#313131FF"
-    color_background = "#212121E3"
-
-    context_menu_event :: NodePopupMenu(node=node).popup()
-
-    NodeSocket:
-        index = 0
-        id = "value"
-        socket_type = SocketType.OUTPUT
-        socket_position = SocketPosition.RIGHT_BOTTOM
+    AutoForm:
+        padding = 0
+        model = attributes
 
 
 class RampController(Atom):
@@ -125,32 +116,12 @@ class RampController(Atom):
 enamldef RampGeneratorEditor(Container):
     attr attributes
     padding = (0, 0, 0, 0)
-    Form:
-        Label:
-            text = 'Running'
-        CheckBox: cb_running:
-            checked := attributes.is_running
-        Label:
-            text = 'Interval'
-        SpinBox: n_interval:
-            maximum = 1000
-            minimum = 50
-            value := attributes.interval
-        Label:
-            text = 'Min Value'
-        SpinBox: n_min_value:
-            maximum = 1000
-            minimum = 0
-            value := attributes.min_value
-        Label:
-            text = 'Max Value'
-        SpinBox: n_max_value:
-            maximum = 1000
-            minimum = 0
-            value := attributes.max_value
+    AutoForm:
+        padding = 0
+        model = attributes
 
 
-enamldef RampGenerator(NodeItem): node:
+enamldef RampGenerator(AutoNode): node:
     color_default = "#0000007F"
     color_selected = "#FFA637FF"
     color_title = "#AAAAAAFF"
@@ -169,11 +140,6 @@ enamldef RampGenerator(NodeItem): node:
         interval := node.model.attributes.interval
         timeout :: ramp_ctrl.step()
 
-    NodeSocket:
-        index = 0
-        id = "value"
-        socket_type = SocketType.OUTPUT
-        socket_position = SocketPosition.RIGHT_BOTTOM
 
 
 enamldef NumberOutputEditor(Container):
@@ -187,20 +153,8 @@ enamldef NumberOutputEditor(Container):
             text << str(attributes.value)
 
 
-enamldef NumberOutput(NodeItem): node:
-    color_default = "#0000007F"
-    color_selected = "#FFA637FF"
-    color_title = "#AAAAAAFF"
-    color_title_background = "#313131FF"
-    color_background = "#212100E3"
-
-    context_menu_event :: NodePopupMenu(node=node).popup()
-
-    NodeSocket:
-        index = 0
-        id = "value"
-        socket_type = SocketType.INPUT
-        socket_position = SocketPosition.LEFT_TOP
+enamldef NumberOutput(AutoNode): node:
+    pass
 
 
 class FigureRenderer(Atom):
@@ -253,20 +207,8 @@ enamldef GraphOutputEditor(Container):
             figure << fig_ctrl.figure
 
 
-enamldef GraphOutput(NodeItem): node:
-    color_default = "#0000007F"
-    color_selected = "#FFA637FF"
-    color_title = "#AAAAAAFF"
-    color_title_background = "#313131FF"
-    color_background = "#212100E3"
-
-    context_menu_event :: NodePopupMenu(node=node).popup()
-
-    NodeSocket:
-        index = 0
-        id = "value"
-        socket_type = SocketType.INPUT
-        socket_position = SocketPosition.LEFT_TOP
+enamldef GraphOutput(AutoNode): node:
+    pass
 
 
 
@@ -281,31 +223,8 @@ enamldef BinaryOperatorEditor(Container):
             selected := attributes.operator
 
 
-enamldef BinaryOperator(NodeItem): node:
-    color_default = "#0000007F"
-    color_selected = "#FFA637FF"
-    color_title = "#AAAAAAFF"
-    color_title_background = "#313131FF"
-    color_background = "#210021E3"
-
-    context_menu_event :: NodePopupMenu(node=node).popup()
-
-    NodeSocket:
-        index = 0
-        id = "in1"
-        socket_type = SocketType.INPUT
-        socket_position = SocketPosition.LEFT_TOP
-    NodeSocket:
-        index = 1
-        id = "in2"
-        socket_type = SocketType.INPUT
-        socket_position = SocketPosition.LEFT_TOP
-
-    NodeSocket:
-        index = 0
-        id = "result"
-        socket_type = SocketType.OUTPUT
-        socket_position = SocketPosition.RIGHT_BOTTOM
+enamldef BinaryOperator(AutoNode): node:
+    pass
 
 
 enamldef Edge(EdgeItem): edge:

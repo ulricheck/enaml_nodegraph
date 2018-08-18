@@ -20,6 +20,8 @@ from enaml.widgets.ipython_console import IPythonConsole
 from enaml_nodegraph.primitives import Point2D
 from enaml_nodegraph.widgets.graphicsview import GraphicsView
 from enaml_nodegraph.widgets.node_graphicsscene import NodeGraphicsScene
+from enaml_nodegraph.widgets.node_item import NodeItem
+from enaml_nodegraph.widgets.edge_item import EdgeItem
 
 
 def confirm_close(window, event):
@@ -33,8 +35,6 @@ def confirm_close(window, event):
 
 
 def deleteSelectedItems(controller, items):
-    from enaml_nodegraph.widgets.node_item import NodeItem
-    from enaml_nodegraph.widgets.edge_item import EdgeItem
     for item in items:
         if isinstance(item, NodeItem):
             controller.destroy_node(item.id)
@@ -70,6 +70,7 @@ enamldef GraphEditorStyleSheet(StyleSheet):
         Setter:
             field = 'font'
             value = '12pt Verdana'
+
 
 enamldef NodeTemplate(Label):
     attr data: bytes
@@ -192,7 +193,7 @@ enamldef Main(MainWindow): mainwindow:
                                 info = json.loads(event.mime_data().data('text/json').decode('utf-8'))
                                 if info.get('class') == 'node':
                                     spos = view1.proxy.widget.mapToScene(event.pos().x, event.pos().y)
-                                    controller.create_node(info['typename'], position=Point2D(x=spos.x(), y=spos.y()))
+                                    n = controller.create_node(info['typename'], position=Point2D(x=spos.x(), y=spos.y()))
                             except Exception as e:
                                 print("Error parsing drag data", e)
 
