@@ -1,21 +1,15 @@
-from atom.api import Atom, Bool, Int, Float, Str, List, Typed, observe
+from atom.api import Atom, Bool, Int, Float, Str, Unicode, List, Typed, observe
 
 from enaml.core.api import Looper, Include
 from enaml.widgets.api import (Container, Field, SpinBox, ObjectCombo, Slider,
-                               Timer, Form, Label, CheckBox, MPLCanvas,
-                               Menu, Action)
+                               Timer, Form, Label, CheckBox, Menu, Action)
 
 from enaml.layout.api import vbox, hbox, align, spacer, grid
-
-import matplotlib.pyplot as plt
-import numpy as np
 
 from enaml_nodegraph.widgets.node_item import NodeItem
 from enaml_nodegraph.widgets.node_content import NodeContent
 from enaml_nodegraph.widgets.node_socket import NodeSocket, SocketPosition, SocketType
 from enaml_nodegraph.widgets.edge_item import EdgeItem, EdgeType
-
-from .autoform import AutoForm
 
 
 TYPE_COLOR_MAP = {
@@ -24,13 +18,6 @@ TYPE_COLOR_MAP = {
     'text': "#FF0077FF",
 }
 
-
-def enum_labels(model, attr):
-    """ Return the list of enum labels for the given model and attr.
-
-    """
-    items = getattr(type(model), attr).items
-    return sorted(items)
 
 
 enamldef NodePopupMenu(Menu):
@@ -55,7 +42,8 @@ enamldef AutoNode(NodeItem): node:
     color_title = "#AAAAAAFF"
     color_title_background = "#313131FF"
     color_background = "#212121E3"
-    attr type_name : Str
+
+    attr type_name
 
     context_menu_event :: NodePopupMenu(node=node).popup()
     Looper:
@@ -75,17 +63,6 @@ enamldef AutoNode(NodeItem): node:
             color_background = TYPE_COLOR_MAP[loop_item.data_type]
             socket_type = SocketType.INPUT
             socket_position = SocketPosition.LEFT_TOP
-
-class InputNode(AutoNode):
-    pass
-
-
-enamldef InputEditor(Container):
-    attr attributes
-    padding = (0, 0, 0, 0)
-    AutoForm:
-        padding = 0
-        model = attributes
 
 
 class RampController(Atom):
@@ -113,14 +90,6 @@ class RampController(Atom):
             self.model.value = self.model.attributes.min_value
 
 
-enamldef RampGeneratorEditor(Container):
-    attr attributes
-    padding = (0, 0, 0, 0)
-    AutoForm:
-        padding = 0
-        model = attributes
-
-
 enamldef RampGenerator(AutoNode): node:
     color_default = "#0000007F"
     color_selected = "#FFA637FF"
@@ -141,94 +110,8 @@ enamldef RampGenerator(AutoNode): node:
         timeout :: ramp_ctrl.step()
 
 
-
-enamldef NumberOutputEditor(Container):
-    attr attributes
-    padding = (0, 0, 0, 0)
-    Form:
-        Label:
-            text = 'Value'
-        Field: display:
-            read_only = True
-            text << str(attributes.value)
-
-
-enamldef NumberOutput(AutoNode): node:
-    pass
-
-
-class FigureRenderer(Atom):
-
-    figure = Typed(plt.Figure)
-    line = Typed(plt.Line2D)
-
-    def _default_figure(self):
-        return plt.Figure()
-
-    def _default_line(self):
-        return self.figure.add_subplot(111).plot([],[])[0]
-
-    def redraw_figure(self, change):
-        values = np.array(change['value'])
-        l = len(values)
-        if l > 0:
-            self.line.set_xdata(range(l))
-            self.line.set_ydata(values)
-
-            ax = self.line.axes
-            ax.set_xlim([0, l])
-            ax.set_ylim([values.min(), values.max()])
-
-            self.figure.canvas.draw()
-            self.figure.canvas.flush_events()
-
-
-enamldef GraphOutputEditor(Container):
-    attr attributes
-    padding = (0, 0, 0, 0)
-    attr fig_ctrl = FigureRenderer()
-    initialized :: attributes.observe('values', fig_ctrl.redraw_figure)
-
-    Container:
-        padding = (0, 0, 0, 0)
-        constraints = [
-            vbox(frm, canvas),
-            canvas.width <= 250,
-            canvas.height <= 200,
-        ]
-        Form: frm:
-            Label:
-                text = 'Max Entries'
-            SpinBox: n_max_entries:
-                maximum = 1000
-                minimum = 1
-                value := attributes.max_entries
-        MPLCanvas: canvas:
-            figure << fig_ctrl.figure
-
-
-enamldef GraphOutput(AutoNode): node:
-    pass
-
-
-
-enamldef BinaryOperatorEditor(Container):
-    attr attributes
-    padding = (0, 0, 0, 0)
-    Form:
-        Label:
-            text = 'Operator'
-        ObjectCombo: operator:
-            items = enum_labels(attributes, "operator")
-            selected := attributes.operator
-
-
-enamldef BinaryOperator(AutoNode): node:
-    pass
-
-
 enamldef Edge(EdgeItem): edge:
-    color_default = "#001000FF"
+    color_default << TYPE_COLOR_MAP.get(model.start_socket.data_type if model.start_socket else None, "#001000FF")
     color_selected = "#00FF00FF"
     line_width = 3.0
     edge_type = EdgeType.EDGE_TYPE_BEZIER

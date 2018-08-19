@@ -1,0 +1,84 @@
+from atom.api import Atom, Bool, Int, Float, Str, List, Typed, observe
+
+from enaml.widgets.api import (Container, Field, SpinBox, ObjectCombo, Slider,
+                               Timer, Form, Label, CheckBox, MPLCanvas,
+                               Menu, Action)
+
+from enaml.layout.api import vbox, hbox, align, spacer, grid
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+from .autoform import AutoForm
+
+
+enamldef AttributeEditor(Container):
+    attr attributes
+    padding = (0, 0, 0, 0)
+    AutoForm:
+        padding = 0
+        model = attributes
+
+
+enamldef OutputEditor(Container):
+    attr attributes
+    padding = (0, 0, 0, 0)
+    Form:
+        Label:
+            text = 'Value'
+        Field: display:
+            read_only = True
+            text << str(attributes.value)
+
+
+class FigureRenderer(Atom):
+
+    figure = Typed(plt.Figure)
+    line = Typed(plt.Line2D)
+
+    def _default_figure(self):
+        return plt.Figure()
+
+    def _default_line(self):
+        return self.figure.add_subplot(111).plot([],[])[0]
+
+    def redraw_figure(self, change):
+        values = np.array(change['value'])
+        l = len(values)
+        if l > 0:
+            self.line.set_xdata(range(l))
+            self.line.set_ydata(values)
+
+            ax = self.line.axes
+            ax.set_xlim([0, l])
+            ax.set_ylim([values.min(), values.max()])
+
+            self.figure.canvas.draw()
+            self.figure.canvas.flush_events()
+
+
+enamldef GraphOutputEditor(Container):
+    attr attributes
+    padding = (0, 0, 0, 0)
+    attr fig_ctrl = FigureRenderer()
+    initialized :: attributes.observe('values', fig_ctrl.redraw_figure)
+
+    Container:
+        padding = (0, 0, 0, 0)
+        constraints = [
+            vbox(frm, canvas),
+            canvas.width <= 250,
+            canvas.height <= 200,
+        ]
+        Form: frm:
+            Label:
+                text = 'Max Entries'
+            SpinBox: n_max_entries:
+                maximum = 1000
+                minimum = 1
+                value := attributes.max_entries
+        MPLCanvas: canvas:
+            figure << fig_ctrl.figure
+
+
+

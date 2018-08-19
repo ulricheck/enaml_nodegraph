@@ -114,8 +114,8 @@ def getAttributeEditorView(controller, selectedNodes, parent):
 
     node_views = []
     for node in selectedNodes:
-        typename = controller.registry.node_widget_class_name_map.get(type(node), None)
-        if typename is None:
+        typename = node.type_name
+        if not typename:
             continue
         view_cls = controller.registry.node_type_name_map[typename].editor_class
         node_views.append([node.name, [view_cls(attributes=node.model.attributes)]])

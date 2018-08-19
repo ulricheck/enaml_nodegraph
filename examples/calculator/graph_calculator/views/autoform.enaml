@@ -37,6 +37,7 @@ template FormControl(Names, MemberType: Int):
     const Attr = Names[0]
     SpinBox:
         value := getattr(model, Attr)
+        maximum = 10000
 
 
 template FormControl(Names, MemberType: Unicode):

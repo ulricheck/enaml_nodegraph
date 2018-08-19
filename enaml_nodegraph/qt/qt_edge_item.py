@@ -25,11 +25,15 @@ class QEdgeItem(QGraphicsPathItem):
 
         self.setPath(self.calcPath())
 
+        painter.setBrush(QtCore.Qt.NoBrush)
+
         if self.proxy.end_socket is None:
             painter.setPen(self.proxy.pen_dragging)
+        elif self.isSelected():
+            painter.setPen(self.proxy.pen_selected)
         else:
-            painter.setPen(self.proxy.pen_default if not self.isSelected() else self.proxy.pen_selected)
-        painter.setBrush(QtCore.Qt.NoBrush)
+            painter.setPen(self.proxy.pen_default)
+
         painter.drawPath(self.path())
 
     def shape(self):
@@ -80,6 +84,9 @@ class QEdgeItem(QGraphicsPathItem):
     def boundingRect(self):
         return self.shape().boundingRect()
 
+    def contextMenuEvent(self, event):
+        self.proxy.on_context_menu(event)
+
     # @todo: these are expected from toolkitobject - but are not valid for graphics items
     def setObjectName(self, name):
         pass
@@ -89,9 +96,6 @@ class QEdgeItem(QGraphicsPathItem):
 
     def deleteLater(self):
         pass
-
-    def contextMenuEvent(self, event):
-        self.proxy.on_context_menu(event)
 
 
 class QtEdgeItem(QtGraphicsItem, ProxyEdgeItem):
@@ -182,6 +186,7 @@ class QtEdgeItem(QtGraphicsItem, ProxyEdgeItem):
 
     def set_color_default(self, color_default):
         self.color_default = get_cached_qcolor(color_default)
+
         self.pen_default = QtGui.QPen(self.color_default)
         self.pen_default.setWidthF(self.line_width)
 
@@ -191,6 +196,7 @@ class QtEdgeItem(QtGraphicsItem, ProxyEdgeItem):
 
     def set_color_selected(self, color_selected):
         self.color_selected = get_cached_qcolor(color_selected)
+
         self.pen_selected = QtGui.QPen(self.color_selected)
         self.pen_selected.setWidthF(2.0)
 

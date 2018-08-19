@@ -38,9 +38,11 @@ class CalculatorGraphController(GraphControllerBase):
         if nt is not None:
             node = nt.model_class()
             kw['model'] = node
+            kw['type_name'] = typename
             n = nt.widget_class(**kw)
             self.view.scene.insert_children(None, [n])
             node.id = n.id
+            n.name = "%s (%s)" % (nt.name, n.id.split("-")[-1])
             self.graph.nodes.append(node)
             self.graph.topologyChanged()
             return n
