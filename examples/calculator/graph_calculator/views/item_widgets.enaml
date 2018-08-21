@@ -117,5 +117,7 @@ enamldef Edge(EdgeItem): edge:
     edge_type = EdgeType.EDGE_TYPE_BEZIER
     edge_roundness = 100
 
+    attr type_name
+
     context_menu_event :: EdgePopupMenu(edge=edge).popup()
 

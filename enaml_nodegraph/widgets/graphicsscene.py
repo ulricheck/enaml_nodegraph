@@ -208,6 +208,12 @@ class GraphicsScene(ToolkitObject, Stylable):
         elif isinstance(item, EdgeItem):
             self.edges.pop(item.id, None)
 
+    def clear_all(self):
+        for edge in list(self.edges.values())[:]:
+            edge.destroy()
+        for node in list(self.nodes.values())[:]:
+            node.destroy()
+
     def generate_item_id(self, cls):
         id = self._item_id_generator.get(cls, 0)
         id += 1

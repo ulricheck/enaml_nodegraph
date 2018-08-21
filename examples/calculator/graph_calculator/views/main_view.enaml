@@ -1,6 +1,7 @@
 from enaml_nodegraph import install
 install()
 
+import os
 import json
 
 from atom.api import Dict
@@ -13,7 +14,7 @@ from enaml.drag_drop import DragData, DropAction
 from enaml.stdlib.message_box import question
 
 from enaml.widgets.api import MainWindow, Window, Container, Field, Label, GroupBox
-from enaml.widgets.api import MenuBar, Menu, Action, ActionGroup, PushButton
+from enaml.widgets.api import MenuBar, Menu, Action, ActionGroup, PushButton, FileDialogEx
 from enaml.widgets.api import DockPane, DockArea, DockItem, Feature
 from enaml.widgets.ipython_console import IPythonConsole
 
@@ -25,8 +26,12 @@ from enaml_nodegraph.widgets.edge_item import EdgeItem
 
 
 def confirm_close(window, event):
+    if not window.controller.is_dirty:
+        event.accept()
+        return
+
     button = question(
-        window, 'Example Application', 'Are you sure you want to quit?'
+        window, 'Graph is not saved!', 'Are you sure you want to quit?'
     )
     if button and button.action == 'accept':
         event.accept()
@@ -123,13 +128,39 @@ def getAttributeEditorView(controller, selectedNodes, parent):
     return [NodeAttributeEditorPanel(node_views=node_views)]
 
 
+def open_file(parent, controller):
+    if controller.is_dirty:
+        button = question(
+            parent, 'Graph is not saved!', 'Are you sure you want to continue?'
+        )
+        if button and button.action != 'accept':
+            return
+
+    path = FileDialogEx.get_open_file_name(parent, current_path=controller.current_path)
+    if path:
+        controller.file_open(path)
+
+
+def save_file(parent, controller, new_file=False):
+    if not controller.filename:
+        new_file = True
+
+    if new_file:
+        path = FileDialogEx.get_save_file_name(parent, current_path=controller.current_path)
+    else:
+        path = os.path.join(controller.current_path, controller.filename)
+
+    if path:
+        controller.file_save(path)
+
+
 enamldef Main(MainWindow): mainwindow:
     GraphEditorStyleSheet:
         pass
 
     attr controller
 
-    title = 'Nodegraph Test'
+    title << 'Graph Calculator: %s%s' % (controller.filename or "<unsaved>", "*" if controller.is_dirty else "")
     initialized :: controller.is_active = True
     closing :: confirm_close(self, change['value'])
 
@@ -137,6 +168,18 @@ enamldef Main(MainWindow): mainwindow:
     MenuBar:
         Menu:
             title = '&File'
+            Action:
+                text = 'New Graph\tCtrl+N'
+                triggered :: controller.file_new()
+            Action:
+                text = 'Open Graph\tCtrl+O'
+                triggered :: open_file(mainwindow, controller)
+            Action:
+                text = 'Save Graph\tCtrl+S'
+                triggered :: save_file(mainwindow, controller)
+            Action:
+                text = 'Save Graph As'
+                triggered :: save_file(mainwindow, controller, new_file=True)
             Action:
                 text = 'Quit Editor\tCtrl+Q'
                 triggered :: mainwindow.close()
@@ -218,5 +261,6 @@ enamldef Main(MainWindow): mainwindow:
                 title = 'Attribute Editor'
                 stretch = 1
                 Container: iav_container:
+                    minimum_size = (200, 300)
                     Include: attr_editor_inc:
                         objects << getAttributeEditorView(controller, controller.selectedNodes, iav_container)

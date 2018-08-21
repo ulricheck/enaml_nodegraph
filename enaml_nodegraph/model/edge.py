@@ -1,6 +1,9 @@
+import logging
 from atom.api import Str, ForwardInstance, Typed, IntEnum
 
 from .base import GraphItem
+
+log = logging.getLogger(__name__)
 
 
 def import_socket_type():

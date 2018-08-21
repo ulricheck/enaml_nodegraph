@@ -56,4 +56,3 @@ class Node(GraphItem):
 
     def _mk_output_dict(self):
         return {v.name: v for v in self.outputs}
-

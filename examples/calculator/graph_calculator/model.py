@@ -27,13 +27,19 @@ class ExecutableGraph(model.Graph):
 
     topologyChanged = Event()
     valuesChanged = Event()
+    attributesChanged = Event()
 
     def _get_nxgraph(self):
-        g = nx.DiGraph()
+        g = nx.MultiDiGraph()
         for node in self.nodes:
-            g.add_node(node)
+            g.add_node(node.id,
+                       id=node.id,
+                       name=node.name)
         for edge in self.edges:
-            g.add_edge(edge.start_socket.node, edge.end_socket.node)
+            g.add_edge(edge.start_socket.node.id, edge.end_socket.node.id,
+                       id=edge.id,
+                       source_socket=edge.start_socket.name,
+                       target_socket=edge.end_socket.name)
         return g
 
     def _observe_topologyChanged(self, change):
@@ -43,9 +49,12 @@ class ExecutableGraph(model.Graph):
     def _observe_valuesChanged(self, change):
         self.execute_graph()
 
+    def _observe_attributesChanged(self, change):
+        self.execute_graph()
+
     def execute_graph(self):
-        for node in nx.topological_sort(self.nxgraph):
-            node.update()
+        for node_id in nx.topological_sort(self.nxgraph):
+            self.node_dict[node_id].update()
 
 
 class OutputSocket(model.Socket):
@@ -110,7 +119,7 @@ class InputNode(NodeBase):
 
     def notify_change(self, change):
         if self.graph is not None:
-            self.graph.valuesChanged()
+            self.graph.attributesChanged()
 
     def update(self):
         for output in self.outputs:
@@ -158,6 +167,14 @@ class RampGeneratorModel(model.Node):
 
     def _default_outputs(self):
         return [OutputSocket(name="value", data_type="int")]
+
+    @observe("attributes.is_running",
+             "attributes.interval",
+             "attributes.min_value",
+             "attributes.max_value")
+    def _handle_attribute_change(self, change):
+        if self.graph is not None:
+            self.graph.attributesChanged()
 
     @observe("value")
     def _handle_value_change(self, change):
