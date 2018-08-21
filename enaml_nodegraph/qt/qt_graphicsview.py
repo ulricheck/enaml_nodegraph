@@ -23,6 +23,7 @@ class QGraphicsView(QtWidgets.QGraphicsView):
     def __init__(self, proxy, parent=None):
         super().__init__(parent)
         self.proxy = proxy
+        self.first_resize = True
 
     def getItemAtClick(self, event):
         """ return the object on which we've clicked/release mouse button """
@@ -36,6 +37,12 @@ class QGraphicsView(QtWidgets.QGraphicsView):
         dist_scene = new_lmb_release_scene_pos - llmbcsp
         edge_drag_threshold_sq = self.proxy.edgeDragStartThreshold*self.proxy.edgeDragStartThreshold
         return (dist_scene.x()*dist_scene.x() + dist_scene.y()*dist_scene.y()) > edge_drag_threshold_sq
+
+    def resizeEvent(self, event):
+        if self.first_resize:
+            self.centerOn(self.width() / 2 - 50, self.height() / 2 - 50)
+            self.first_resize = False
+        super().resizeEvent(event)
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.MiddleButton:
