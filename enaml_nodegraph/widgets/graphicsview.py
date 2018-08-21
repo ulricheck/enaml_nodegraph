@@ -133,3 +133,11 @@ class GraphicsView(Control):
         self.selectedItems = items
         if self.controller is not None:
             self.controller.itemsSelected(items)
+
+    def getViewportTransform(self):
+        if self.proxy is not None:
+            return self.proxy.getViewportTransform()
+
+    def setViewportTransform(self, trans):
+        if self.proxy is not None:
+            self.proxy.setViewportTransform(trans)

@@ -77,7 +77,7 @@ class EdgeItem(GraphicsItem):
     def _default_id(self):
         if self.scene is not None:
             cls = self.__class__
-            return "%s-%00d" % (cls.__name__, self.scene.generate_item_id(cls))
+            return self.scene.generate_item_id(cls.__name__, cls)
         return "<undefined>"
 
     def _default_name(self):

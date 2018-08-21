@@ -5,7 +5,7 @@ from enaml.qt.qt_control import QtControl
 from enaml_nodegraph.widgets.graphicsview import ProxyGraphicsView
 from enaml_nodegraph.widgets.graphicsscene import GraphicsScene
 from enaml_nodegraph.widgets.graphicsitem import GraphicsItem
-from enaml_nodegraph.primitives import Point2D
+from enaml_nodegraph.primitives import Point2D, Transform2D
 
 from enaml_nodegraph.qt.qt_node_item import QNodeItem
 from enaml_nodegraph.qt.qt_edge_item import QEdgeItem
@@ -330,3 +330,18 @@ class QtGraphicsView(QtControl, ProxyGraphicsView):
         if self.scene is not None and self.scene.proxy is not None:
             items = self.scene.proxy.widget.selectedItems()
             self.declaration.handle_selection_changed([i.proxy.declaration for i in items if isinstance(i.proxy.declaration, GraphicsItem)])
+
+    def getViewportTransform(self):
+        if self.widget is not None:
+            qtrans = self.widget.transform()
+            return Transform2D(m11=qtrans.m11(), m21=qtrans.m21(), m31=qtrans.m31(),
+                               m12=qtrans.m12(), m22=qtrans.m22(), m32=qtrans.m32(),
+                               m13=qtrans.m13(), m23=qtrans.m23(), m33=qtrans.m33())
+
+    def setViewportTransform(self, trans):
+        if self.widget is not None:
+            qtrans = QtGui.QTransform(trans.m11, trans.m12, trans.m13,
+                                      trans.m21, trans.m22, trans.m23,
+                                      trans.m31, trans.m32, trans.m33)
+            self.widget.setTransform(qtrans)
+

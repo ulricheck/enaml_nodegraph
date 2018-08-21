@@ -214,11 +214,19 @@ class GraphicsScene(ToolkitObject, Stylable):
         for node in list(self.nodes.values())[:]:
             node.destroy()
 
-    def generate_item_id(self, cls):
+    def generate_item_id(self, prefix, cls):
         id = self._item_id_generator.get(cls, 0)
-        id += 1
+        existing_ids = list(self.nodes.keys()) + list(self.edges.keys())
+        found_id = False
+
+        while not found_id:
+            id += 1
+            item_id = "%s-%00d" % (prefix, id)
+            if item_id not in existing_ids:
+                found_id = True
+
         self._item_id_generator[cls] = id
-        return id
+        return item_id
 
     def set_focus(self):
         """ Set the keyboard input focus to this widget.

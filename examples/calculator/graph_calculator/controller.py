@@ -7,7 +7,7 @@ from atom.api import (Bool, List, Unicode, Typed, Instance, Event, observe)
 
 from enaml_nodegraph.controller import GraphControllerBase
 from enaml_nodegraph.widgets.node_item import NodeItem
-from enaml_nodegraph.primitives import Point2D
+from enaml_nodegraph.primitives import Point2D, Transform2D
 
 from .registry import TypeRegistry
 from .model import ExecutableGraph
@@ -133,7 +133,7 @@ class CalculatorGraphController(GraphControllerBase):
 
     def serialize_graph(self):
         G = self.graph.nxgraph.copy()
-
+        G.graph['viewport_transform'] = self.view.getViewportTransform().to_list()
         for node_id in G.nodes():
             node_view = self.view.scene.nodes[node_id]
             node_data = {}
@@ -152,7 +152,7 @@ class CalculatorGraphController(GraphControllerBase):
 
     def serialize_node(self, archive, node_view):
         archive['type_name'] = node_view.type_name
-        archive['position'] = [node_view.position.x, node_view.position.y]
+        archive['position'] = node_view.position.to_list()
         if node_view.model is not None:
             node_view.model.serialize(archive)
 
@@ -161,21 +161,26 @@ class CalculatorGraphController(GraphControllerBase):
         if edge_view.model is not None:
             edge_view.model.serialize(archive)
 
-    def deserialize_graph(self, graph, replace=True):
-        for node_id in graph.nodes.keys():
-            data = graph.nodes[node_id]
+    def deserialize_graph(self, G, replace=True):
+        if 'viewport_transform' in G.graph:
+            self.view.setViewportTransform(Transform2D.from_list(G.graph['viewport_transform']))
+
+        for node_id in G.nodes.keys():
+            data = G.nodes[node_id]
             type_name = data.get('type_name', None)
             if type_name is None:
                 log.error("Invalid Node (missing type_name): %s" % node_id)
                 continue
 
-            position = Point2D(x=data['position'][0], y=data['position'][1])
+            position = Point2D.from_list(data['position'])
             name = data['name']
 
-            self.create_node(type_name, id=node_id, name=name, position=position)
+            n = self.create_node(type_name, id=node_id, name=name, position=position)
+            if n.model is not None:
+                n.model.deserialize(data)
 
-        for start_node_id, end_node_id, key, edge_id in graph.edges(data='id', keys=True):
-            data = graph.edges[start_node_id, end_node_id, key]
+        for start_node_id, end_node_id, key, edge_id in G.edges(data='id', keys=True):
+            data = G.edges[start_node_id, end_node_id, key]
             type_name = data.get('type_name', None)
             if type_name is None:
                 log.error("Invalid Edge (missing type_name): %s" % edge_id)
@@ -201,8 +206,10 @@ class CalculatorGraphController(GraphControllerBase):
             e.start_socket = source_socket
             e.end_socket = target_socket
 
-            self.edge_connected(edge_id)
+            if e.model is not None:
+                e.model.deserialize(data)
 
+            self.edge_connected(edge_id)
 
     def file_new(self):
         self.filename = ""
@@ -216,6 +223,7 @@ class CalculatorGraphController(GraphControllerBase):
             self.view.scene.clear_all()
         g = nx.node_link_graph(json.load(open(os.path.join(self.current_path, self.filename), 'r')))
         self.deserialize_graph(g, replace=replace)
+        self.is_dirty = False
 
     def file_save(self, filename):
         self.current_path = os.path.dirname(filename)
