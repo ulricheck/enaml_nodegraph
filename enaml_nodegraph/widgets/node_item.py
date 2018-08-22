@@ -1,7 +1,7 @@
 import math
 
 from atom.api import (
-    Atom, Bool, Int, Float, Unicode, Str, Typed, Dict, List, Instance, Event, ForwardTyped, observe
+    Atom, Bool, Int, Float, Unicode, Str, Typed, Dict, List, Instance, Event, Property, ForwardTyped, observe
 )
 
 from enaml.core.declarative import d_
@@ -90,10 +90,15 @@ class NodeItem(GraphicsItem):
 
     context_menu_event = d_(Event())
 
+    recompute_node_layout = d_(Event())
+
     #: optional Node Content
     content = Instance(NodeContent)
     input_sockets = List(NodeSocket)
     output_sockets = List(NodeSocket)
+
+    input_sockets_visible = Property(lambda self: [s for s in self.input_sockets if s.visible], cached=True)
+    output_sockets_visible = Property(lambda self: [s for s in self.output_sockets if s.visible], cached=True)
 
     input_sockets_dict = Dict(Str(), NodeSocket)
     output_sockets_dict = Dict(Str(), NodeSocket)
@@ -105,9 +110,7 @@ class NodeItem(GraphicsItem):
         return Point2D(x=0, y=0)
 
     def _default_height(self):
-        socket_space = max(sum(s.socket_spacing for s in self.input_sockets),
-                           sum(s.socket_spacing for s in self.output_sockets))
-        return math.ceil(self.title_height + 2 * self.padding + 2 * self.edge_size + socket_space)
+        return self.compute_height()
 
     def _default_id(self):
         if self.scene is not None:
@@ -148,6 +151,9 @@ class NodeItem(GraphicsItem):
                 self.output_sockets.remove(child)
                 self.output_sockets_dict.pop(child.id)
 
+    def activate_bottom_up(self):
+        self.assign_socket_indices()
+
     #--------------------------------------------------------------------------
     # Observers
     #--------------------------------------------------------------------------
@@ -171,9 +177,44 @@ class NodeItem(GraphicsItem):
         if self.content is not None:
             self.content.update_content_geometry()
 
+    def _observe_recompute_node_layout(self, change):
+        if self.initialized:
+            self.update_node_layout()
+
     #--------------------------------------------------------------------------
     # NodeItem API
     #--------------------------------------------------------------------------
+
+    def update_node_layout(self):
+        self.get_member('input_sockets_visible').reset(self)
+        self.get_member('output_sockets_visible').reset(self)
+        self.assign_socket_indices()
+        self.height = self.compute_height()
+        self.update_sockets_and_edges()
+
+    def assign_socket_indices(self):
+        for socket in self.input_sockets:
+            if socket in self.input_sockets_visible:
+                socket.index = self.input_sockets_visible.index(socket)
+            else:
+                socket.index = 0
+        for socket in self.output_sockets:
+            if socket in self.output_sockets_visible:
+                socket.index = self.output_sockets_visible.index(socket)
+            else:
+                socket.index = 0
+
+    def update_sockets_and_edges(self):
+        for socket in self.input_sockets_visible + self.output_sockets_visible:
+            socket.update_sockets()
+            for edge in socket.edges:
+                edge.update_positions()
+
+    def compute_height(self):
+        socket_space = max(sum(s.socket_spacing for s in self.input_sockets_visible),
+                           sum(s.socket_spacing for s in self.output_sockets_visible))
+        return math.ceil(self.title_height + 2 * self.padding + 2 * self.edge_size + socket_space)
+
 
     # XXX must avoid cyclic updates ..
     def set_position(self, pos):

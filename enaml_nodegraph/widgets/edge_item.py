@@ -148,6 +148,15 @@ class EdgeItem(GraphicsItem):
     # Protected API
     #--------------------------------------------------------------------------
 
+    def update_positions(self):
+        if self.start_socket is not None:
+            node_position = self.start_socket.parent.position
+            self.pos_source = node_position + self.start_socket.relative_position
+        if self.end_socket is not None:
+            node_position = self.end_socket.parent.position
+            self.pos_destination = node_position + self.end_socket.relative_position
+
+
     def update_pos_source(self, change):
         node_position = change['value']
         if self.start_socket is not None:

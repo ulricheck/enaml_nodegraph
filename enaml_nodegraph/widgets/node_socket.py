@@ -121,6 +121,13 @@ class NodeSocket(GraphicsItem):
     def _update_relative_position(self, change):
         self.update_sockets()
 
+    def _observe_visible(self, change):
+        if self.initialized:
+            from .node_item import NodeItem
+            node = self.parent
+            if isinstance(node, NodeItem):
+                node.recompute_node_layout()
+
     #--------------------------------------------------------------------------
     # Private API
     #--------------------------------------------------------------------------
