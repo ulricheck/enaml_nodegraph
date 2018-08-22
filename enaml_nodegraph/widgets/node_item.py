@@ -143,10 +143,10 @@ class NodeItem(GraphicsItem):
         if isinstance(child, NodeSocket):
             if child.socket_type == SocketType.INPUT:
                 self.input_sockets.remove(child)
-                self.input_sockets_dict.popitem(child.id)
+                self.input_sockets_dict.pop(child.id)
             elif child.socket_type == SocketType.OUTPUT:
                 self.output_sockets.remove(child)
-                self.output_sockets_dict.popitem(child.id)
+                self.output_sockets_dict.pop(child.id)
 
     #--------------------------------------------------------------------------
     # Observers
