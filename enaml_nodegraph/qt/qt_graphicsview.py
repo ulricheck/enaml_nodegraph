@@ -166,7 +166,7 @@ class QGraphicsView(QtWidgets.QGraphicsView):
                     return
 
         if self.proxy.edgeEditMode == EdgeEditMode.MODE_EDGE_CUT:
-            self.proxy.cutIntersectingEdges()
+            # self.proxy.cutIntersectingEdges()
             # self.proxy.cutline.line_points = []
             # self.proxy.cutline.update()
             QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.ArrowCursor)

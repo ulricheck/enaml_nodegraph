@@ -1,7 +1,7 @@
 import math
 
 from atom.api import (
-    Atom, Bool, Int, Float, Unicode, Str, Typed, List, Instance, Event, ForwardTyped, observe
+    Atom, Bool, Int, Float, Unicode, Str, Typed, Dict, List, Instance, Event, ForwardTyped, observe
 )
 
 from enaml.core.declarative import d_
@@ -95,6 +95,8 @@ class NodeItem(GraphicsItem):
     input_sockets = List(NodeSocket)
     output_sockets = List(NodeSocket)
 
+    input_sockets_dict = Dict(Str(), NodeSocket)
+    output_sockets_dict = Dict(Str(), NodeSocket)
 
     #: A reference to the ProxyComboBox object.
     proxy = Typed(ProxyNodeItem)
@@ -128,8 +130,10 @@ class NodeItem(GraphicsItem):
         if isinstance(child, NodeSocket):
             if child.socket_type == SocketType.INPUT:
                 self.input_sockets.append(child)
+                self.input_sockets_dict[child.id] = child
             elif child.socket_type == SocketType.OUTPUT:
                 self.output_sockets.append(child)
+                self.output_sockets_dict[child.id] = child
 
     def child_removed(self, child):
         """ Reset the item cache when a child is removed """
@@ -139,8 +143,10 @@ class NodeItem(GraphicsItem):
         if isinstance(child, NodeSocket):
             if child.socket_type == SocketType.INPUT:
                 self.input_sockets.remove(child)
+                self.input_sockets_dict.popitem(child.id)
             elif child.socket_type == SocketType.OUTPUT:
                 self.output_sockets.remove(child)
+                self.output_sockets_dict.popitem(child.id)
 
     #--------------------------------------------------------------------------
     # Observers

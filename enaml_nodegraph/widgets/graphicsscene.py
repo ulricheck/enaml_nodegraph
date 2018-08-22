@@ -89,8 +89,8 @@ class GraphicsScene(ToolkitObject, Stylable):
     """
 
     # dimensions
-    width = d_(Int(640))
-    height = d_(Int(480))
+    width = d_(Int(64000))
+    height = d_(Int(64000))
 
     #: The background color of the widget.
     background = d_(ColorMember())

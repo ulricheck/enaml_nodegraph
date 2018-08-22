@@ -32,8 +32,8 @@ class QtGraphicsScene(QtToolkitObject, ProxyGraphicsScene):
 
     """
     # dimensions
-    width = Int(640)
-    height = Int(480)
+    width = Int(64000)
+    height = Int(64000)
 
     #: A reference to the toolkit widget created by the proxy.
     widget = Typed(QGraphicsScene)
@@ -358,7 +358,8 @@ class QtGraphicsScene(QtToolkitObject, ProxyGraphicsScene):
         self.widget.update(self.widget.sceneRect())
 
     def update_scenerect(self):
-        self.widget.setSceneRect(self.boundingRect())
+        bb = self.boundingRect()
+        self.widget.setSceneRect(bb)
 
     def set_width(self, width):
         self.width = width
