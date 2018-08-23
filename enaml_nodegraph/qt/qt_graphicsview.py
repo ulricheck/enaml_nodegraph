@@ -25,6 +25,7 @@ class QGraphicsView(QtWidgets.QGraphicsView):
         self.proxy = proxy
         self.first_resize = True
         self.interaction_with_touchpad = False
+        self.gesture_active = False
 
         self.setAttribute(QtCore.Qt.WA_AcceptTouchEvents)
         self.grabGesture(QtCore.Qt.PinchGesture)
@@ -46,8 +47,16 @@ class QGraphicsView(QtWidgets.QGraphicsView):
 
     def viewportEvent(self, event):
         et = event.type()
+
+        if et == QtCore.QEvent.Gesture:
+            return self.gestureEvent(event)
+
+        if et == QtCore.QEvent.GestureOverride:
+            event.accept()
+
         if et == QtCore.QEvent.TouchBegin:
             self.interaction_with_touchpad = True
+            event.accept()
         elif et == QtCore.QEvent.TouchEnd or et == QtCore.QEvent.TouchCancel:
             self.interaction_with_touchpad = False
 
@@ -55,10 +64,6 @@ class QGraphicsView(QtWidgets.QGraphicsView):
 
     def event(self, event):
         et = event.type()
-
-        if et == QtCore.QEvent.GestureOverride:
-            print("gesture override")
-            return True
 
         if et == QtCore.QEvent.Gesture:
             return self.gestureEvent(event)
@@ -68,24 +73,49 @@ class QGraphicsView(QtWidgets.QGraphicsView):
     def gestureEvent(self, event):
         pan = event.gesture(QtCore.Qt.PanGesture)
         if pan:
-            offset = pan.offset()
-            print("pan: %s" % offset)
+            gs = pan.state()
+            if gs == QtCore.Qt.GestureStarted:
+                self.gesture_active = True
+                event.accept(pan)
+            elif gs == QtCore.Qt.GestureUpdated:
+                # @todo: does not really work well .. need to find a way to relate delta() to the effect of dragging
+                delta_x = pan.delta().x()
+                delta_y = pan.delta().y()
+                self.translate(delta_x, delta_y)
+            elif gs == QtCore.Qt.GestureFinished or gs == QtCore.Qt.GestureCanceled:
+                self.gesture_active = False
+
             return True
 
         swipe = event.gesture(QtCore.Qt.SwipeGesture)
         if swipe:
-            hdir = swipe.horizontalDirection()
-            vdir = swipe.verticalDirection()
-            angle = swipe.swipeAngle()
-            print("swipe: %s %s %s" % (hdir, vdir, angle))
+            gs = swipe.state()
+            if gs == QtCore.Qt.GestureStarted:
+                self.gesture_active = True
+                event.accept(pan)
+            elif gs == QtCore.Qt.GestureUpdated:
+                hdir = swipe.horizontalDirection()
+                vdir = swipe.verticalDirection()
+                angle = swipe.swipeAngle()
+                print("swipe: %s %s %s" % (hdir, vdir, angle))
+            elif gs == QtCore.Qt.GestureFinished or gs == QtCore.Qt.GestureCanceled:
+                self.gesture_active = False
+
             return True
 
         pinch = event.gesture(QtCore.Qt.PinchGesture)
         if pinch:
-            flags = pinch.changeFlags()
-            if flags & QtWidgets.QPinchGesture.ScaleFactorChanged:
-                zoom_factor = pinch.scaleFactor()
-                self.scale(zoom_factor, zoom_factor)
+            gs = pinch.state()
+            if gs == QtCore.Qt.GestureStarted:
+                self.gesture_active = True
+                event.accept(pan)
+            elif gs == QtCore.Qt.GestureUpdated:
+                flags = pinch.changeFlags()
+                if flags & QtWidgets.QPinchGesture.ScaleFactorChanged:
+                    zoom_factor = pinch.scaleFactor()
+                    self.scale(zoom_factor, zoom_factor)
+            elif gs == QtCore.Qt.GestureFinished or gs == QtCore.Qt.GestureCanceled:
+                self.gesture_active = False
 
             return True
 
@@ -241,45 +271,45 @@ class QGraphicsView(QtWidgets.QGraphicsView):
         item = self.getItemAtClick(event)
 
     def mouseMoveEvent(self, event):
-        if self.proxy.edgeEditMode == EdgeEditMode.MODE_EDGE_DRAG:
-            pos = self.mapToScene(event.pos())
-            self.proxy.updatePoseEdgeDrag(Point2D(x=pos.x(), y=pos.y()))
+        if not self.gesture_active:
 
-        if self.proxy.edgeEditMode == EdgeEditMode.MODE_EDGE_CUT:
-            pos = self.mapToScene(event.pos())
-            # self.cutline.line_points.append(pos)
-            # self.cutline.update()
+            if self.proxy.edgeEditMode == EdgeEditMode.MODE_EDGE_DRAG:
+                pos = self.mapToScene(event.pos())
+                self.proxy.updatePoseEdgeDrag(Point2D(x=pos.x(), y=pos.y()))
 
-        point = self.mapToScene(event.pos())
-        self.proxy.lastSceneMousePosition = Point2D(x=point.x(), y=point.y())
+            if self.proxy.edgeEditMode == EdgeEditMode.MODE_EDGE_CUT:
+                pos = self.mapToScene(event.pos())
+                # self.cutline.line_points.append(pos)
+                # self.cutline.update()
 
-        self.proxy.scenePosChanged(Point2D(x=point.x(), y=point.y()))
+            point = self.mapToScene(event.pos())
+            self.proxy.lastSceneMousePosition = Point2D(x=point.x(), y=point.y())
+
+            self.proxy.scenePosChanged(Point2D(x=point.x(), y=point.y()))
 
         super().mouseMoveEvent(event)
 
     def wheelEvent(self, event):
-        if self.interaction_with_touchpad:
-            return
+        if not (self.interaction_with_touchpad or self.gesture_active):
+            # @todo: use modifiers to switch between panning and zooming
 
-        # @todo: use modifiers to switch between panning and zooming
+            # calculate our zoom Factor
+            zoomOutFactor = 1 / self.proxy.zoomInFactor
 
-        # calculate our zoom Factor
-        zoomOutFactor = 1 / self.proxy.zoomInFactor
+            zoom = self.proxy.zoom
+            # calculate zoom
+            if event.angleDelta().y() > 0:
+                zoom_factor = self.proxy.zoomInFactor
+                zoom += self.proxy.zoomStep
+            else:
+                zoom_factor = zoomOutFactor
+                zoom -= self.proxy.zoomStep
 
-        zoom = self.proxy.zoom
-        # calculate zoom
-        if event.angleDelta().y() > 0:
-            zoom_factor = self.proxy.zoomInFactor
-            zoom += self.proxy.zoomStep
-        else:
-            zoom_factor = zoomOutFactor
-            zoom -= self.proxy.zoomStep
-
-        try:
-            self.proxy.zoom = zoom
-            self.scale(zoom_factor, zoom_factor)
-        except TypeError:
-            pass
+            try:
+                self.proxy.zoom = zoom
+                self.scale(zoom_factor, zoom_factor)
+            except TypeError:
+                pass
 
 
 class QtGraphicsView(QtControl, ProxyGraphicsView):
