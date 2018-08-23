@@ -24,6 +24,12 @@ class QGraphicsView(QtWidgets.QGraphicsView):
         super().__init__(parent)
         self.proxy = proxy
         self.first_resize = True
+        self.interaction_with_touchpad = False
+
+        self.setAttribute(QtCore.Qt.WA_AcceptTouchEvents)
+        self.grabGesture(QtCore.Qt.PinchGesture)
+        self.grabGesture(QtCore.Qt.SwipeGesture)
+        self.grabGesture(QtCore.Qt.PanGesture)
 
     def getItemAtClick(self, event):
         """ return the object on which we've clicked/release mouse button """
@@ -37,6 +43,53 @@ class QGraphicsView(QtWidgets.QGraphicsView):
         dist_scene = new_lmb_release_scene_pos - llmbcsp
         edge_drag_threshold_sq = self.proxy.edgeDragStartThreshold*self.proxy.edgeDragStartThreshold
         return (dist_scene.x()*dist_scene.x() + dist_scene.y()*dist_scene.y()) > edge_drag_threshold_sq
+
+    def viewportEvent(self, event):
+        et = event.type()
+        if et == QtCore.QEvent.TouchBegin:
+            self.interaction_with_touchpad = True
+        elif et == QtCore.QEvent.TouchEnd or et == QtCore.QEvent.TouchCancel:
+            self.interaction_with_touchpad = False
+
+        return super().viewportEvent(event)
+
+    def event(self, event):
+        et = event.type()
+
+        if et == QtCore.QEvent.GestureOverride:
+            print("gesture override")
+            return True
+
+        if et == QtCore.QEvent.Gesture:
+            return self.gestureEvent(event)
+
+        return super().event(event)
+
+    def gestureEvent(self, event):
+        pan = event.gesture(QtCore.Qt.PanGesture)
+        if pan:
+            offset = pan.offset()
+            print("pan: %s" % offset)
+            return True
+
+        swipe = event.gesture(QtCore.Qt.SwipeGesture)
+        if swipe:
+            hdir = swipe.horizontalDirection()
+            vdir = swipe.verticalDirection()
+            angle = swipe.swipeAngle()
+            print("swipe: %s %s %s" % (hdir, vdir, angle))
+            return True
+
+        pinch = event.gesture(QtCore.Qt.PinchGesture)
+        if pinch:
+            flags = pinch.changeFlags()
+            if flags & QtWidgets.QPinchGesture.ScaleFactorChanged:
+                zoom_factor = pinch.scaleFactor()
+                self.scale(zoom_factor, zoom_factor)
+
+            return True
+
+        return True
 
     def resizeEvent(self, event):
         if self.first_resize:
@@ -204,34 +257,13 @@ class QGraphicsView(QtWidgets.QGraphicsView):
 
         super().mouseMoveEvent(event)
 
-    def keyPressEvent(self, event):
-        # if event.key() == Qt.Key_Delete:
-        #     if not self.editingFlag:
-        #         self.deleteSelected()
-        #     else:
-        #         super().keyPressEvent(event)
-        # elif event.key() == Qt.Key_S and event.modifiers() & Qt.ControlModifier:
-        #     self.grScene.scene.saveToFile("graph.json.txt")
-        # elif event.key() == Qt.Key_L and event.modifiers() & Qt.ControlModifier:
-        #     self.grScene.scene.loadFromFile("graph.json.txt")
-        # elif event.key() == Qt.Key_Z and event.modifiers() & Qt.ControlModifier and not event.modifiers() & Qt.ShiftModifier:
-        #     self.grScene.scene.history.undo()
-        # elif event.key() == Qt.Key_Z and event.modifiers() & Qt.ControlModifier and event.modifiers() & Qt.ShiftModifier:
-        #     self.grScene.scene.history.redo()
-        # elif event.key() == Qt.Key_H:
-        #     print("HISTORY:     len(%d)" % len(self.grScene.scene.history.history_stack),
-        #           " -- current_step", self.grScene.scene.history.history_current_step)
-        #     ix = 0
-        #     for item in self.grScene.scene.history.history_stack:
-        #         print("#", ix, "--", item['desc'])
-        #         ix += 1
-        # else:
-        super().keyPressEvent(event)
-
     def wheelEvent(self, event):
-        # calculate our zoom Factor
+        if self.interaction_with_touchpad:
+            return
 
         # @todo: use modifiers to switch between panning and zooming
+
+        # calculate our zoom Factor
         zoomOutFactor = 1 / self.proxy.zoomInFactor
 
         zoom = self.proxy.zoom
@@ -351,4 +383,12 @@ class QtGraphicsView(QtControl, ProxyGraphicsView):
                                       trans.m21, trans.m22, trans.m23,
                                       trans.m31, trans.m32, trans.m33)
             self.widget.setTransform(qtrans)
+
+    def resetViewportTransform(self):
+        if self.widget is not None:
+            self.widget.resetTransform()
+
+    def fitInView(self, bbox):
+        if self.widget is not None:
+            self.widget.fitInView(QtCore.QRectF(*bbox), QtCore.Qt.KeepAspectRatio)
 

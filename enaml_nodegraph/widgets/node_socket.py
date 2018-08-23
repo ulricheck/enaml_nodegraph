@@ -1,5 +1,5 @@
 from atom.api import (
-    Int, Float, Bool, Unicode, Typed, Str, ContainerList, IntEnum, ForwardTyped, Property, observe
+    Int, Float, Bool, Unicode, Typed, Str, ContainerList, IntEnum, ForwardTyped, Property, Coerced, observe
 )
 
 from enaml.core.declarative import d_

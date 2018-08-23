@@ -58,6 +58,10 @@ class ProxyNodeItem(ProxyGraphicsItem):
         raise NotImplementedError
 
 
+# Guard flags
+NODE_UPDATE_LAYOUT_GUARD = 0x1
+
+
 class NodeItem(GraphicsItem):
     """ A node-item in a node graph
 
@@ -102,6 +106,9 @@ class NodeItem(GraphicsItem):
 
     input_sockets_dict = Dict(Str(), NodeSocket)
     output_sockets_dict = Dict(Str(), NodeSocket)
+
+    #: Cyclic notification guard. This a bitfield of multiple guards.
+    _guard = Int(0)
 
     #: A reference to the ProxyComboBox object.
     proxy = Typed(ProxyNodeItem)
@@ -179,18 +186,21 @@ class NodeItem(GraphicsItem):
 
     def _observe_recompute_node_layout(self, change):
         if self.initialized:
-            self.update_node_layout()
+            if not self._guard & NODE_UPDATE_LAYOUT_GUARD:
+                self.update_node_layout()
 
     #--------------------------------------------------------------------------
     # NodeItem API
     #--------------------------------------------------------------------------
 
     def update_node_layout(self):
+        self._guard |= NODE_UPDATE_LAYOUT_GUARD
         self.get_member('input_sockets_visible').reset(self)
         self.get_member('output_sockets_visible').reset(self)
         self.assign_socket_indices()
         self.height = self.compute_height()
         self.update_sockets_and_edges()
+        self._guard &= ~NODE_UPDATE_LAYOUT_GUARD
 
     def assign_socket_indices(self):
         for socket in self.input_sockets:

@@ -228,6 +228,20 @@ class GraphicsScene(ToolkitObject, Stylable):
         self._item_id_generator[cls] = id
         return item_id
 
+    def bounding_box_all_nodes(self):
+        x_min = []
+        y_min = []
+        x_max = []
+        y_max = []
+        for node in self.nodes.values():
+            x_min.append(node.position.x)
+            x_max.append(node.position.x + node.width)
+            y_min.append(node.position.y)
+            y_max.append(node.position.y + node.height)
+        x = min(x_min)
+        y = min(y_min)
+        return [x, y, max(x_max) - x, max(y_max) - y]
+
     def set_focus(self):
         """ Set the keyboard input focus to this widget.
 

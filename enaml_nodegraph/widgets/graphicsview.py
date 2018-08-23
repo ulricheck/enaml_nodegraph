@@ -141,3 +141,10 @@ class GraphicsView(Control):
     def setViewportTransform(self, trans):
         if self.proxy is not None:
             self.proxy.setViewportTransform(trans)
+
+    def fitNodesInView(self):
+        self.proxy.fitInView(self.scene.bounding_box_all_nodes())
+
+    def resetViewportTransform(self):
+        self.proxy.resetViewportTransform()
+
