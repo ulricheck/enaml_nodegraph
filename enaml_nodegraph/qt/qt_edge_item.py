@@ -150,7 +150,7 @@ class QtEdgeItem(QtGraphicsItem, ProxyEdgeItem):
         self.set_pos_destination(d.pos_destination)
 
         self.widget.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable)
-        self.widget.setZValue(-1)
+        self.widget.setZValue(1)
 
     #--------------------------------------------------------------------------
     # observers
