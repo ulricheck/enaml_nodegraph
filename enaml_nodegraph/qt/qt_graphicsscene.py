@@ -357,9 +357,13 @@ class QtGraphicsScene(QtToolkitObject, ProxyGraphicsScene):
         """
         self.widget.update(self.widget.sceneRect())
 
-    def update_scenerect(self):
-        bb = self.boundingRect()
-        self.widget.setSceneRect(bb)
+    def update_scenerect(self, bbox=None):
+        if bbox is not None:
+            bb = QRectF(*bbox)
+        else:
+            bb = self.boundingRect()
+        if self.widget is not None:
+            self.widget.setSceneRect(bb)
 
     def set_width(self, width):
         self.width = width

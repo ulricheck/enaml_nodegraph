@@ -58,6 +58,10 @@ class ProxyNodeSocket(ProxyGraphicsItem):
         raise NotImplementedError
 
 
+# Guard flags
+SOCKET_COMPUTE_HEIGHT_GUARD = 0x1
+
+
 class NodeSocket(GraphicsItem):
     """ A node-item in a node graph
 
@@ -83,6 +87,9 @@ class NodeSocket(GraphicsItem):
 
     relative_position = Typed(Point2D)
     edges = ContainerList(EdgeItem)
+
+    #: Cyclic notification guard. This a bitfield of multiple guards.
+    _guard = Int(0)
 
     #: A reference to the ProxyComboBox object.
     proxy = Typed(ProxyNodeSocket)
@@ -119,7 +126,8 @@ class NodeSocket(GraphicsItem):
 
     @observe('socket_position', 'index', 'socket_spacing')
     def _update_relative_position(self, change):
-        self.update_sockets()
+        if not self._guard & SOCKET_COMPUTE_HEIGHT_GUARD:
+            self.update_sockets()
 
     def _observe_visible(self, change):
         if self.initialized:
@@ -136,6 +144,8 @@ class NodeSocket(GraphicsItem):
         self.relative_position = self.compute_socket_position()
 
     def compute_socket_position(self):
+        self._guard |= SOCKET_COMPUTE_HEIGHT_GUARD
+        result = Point2D(x=0, y=0)
         from .node_item import NodeItem
         node = self.parent
         if isinstance(node, NodeItem):
@@ -148,6 +158,7 @@ class NodeSocket(GraphicsItem):
                 # start from top
                 y = node.title_height + node.padding + node.edge_size + self.index * self.socket_spacing
 
-            return Point2D(x=x, y=y)
-        else:
-            return Point2D(x=0, y=0)
+            result = Point2D(x=x, y=y)
+
+        self._guard &= ~SOCKET_COMPUTE_HEIGHT_GUARD
+        return result

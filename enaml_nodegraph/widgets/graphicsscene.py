@@ -89,8 +89,8 @@ class GraphicsScene(ToolkitObject, Stylable):
     """
 
     # dimensions
-    width = d_(Int(64000))
-    height = d_(Int(64000))
+    width = d_(Int(6400))
+    height = d_(Int(6400))
 
     #: The background color of the widget.
     background = d_(ColorMember())
@@ -154,6 +154,10 @@ class GraphicsScene(ToolkitObject, Stylable):
             self.delete_item(child)
         self.guard = SceneGuard.NOOP
 
+    def activate_bottom_up(self):
+        super(GraphicsScene, self).activate_bottom_up()
+        self.set_scene_rect(self.bounding_box_all_nodes())
+
     #--------------------------------------------------------------------------
     # Observers
     #--------------------------------------------------------------------------
@@ -208,6 +212,17 @@ class GraphicsScene(ToolkitObject, Stylable):
         elif isinstance(item, EdgeItem):
             self.edges.pop(item.id, None)
 
+    def update_item_id(self, item, id):
+        if isinstance(item, NodeItem):
+            self.nodes.pop(item.id, None)
+            item.id = id
+            self.nodes[id] = item
+
+        elif isinstance(item, EdgeItem):
+            self.edges.pop(item.id, None)
+            item.id = id
+            self.edges[id] = item
+
     def clear_all(self):
         for edge in list(self.edges.values())[:]:
             edge.destroy()
@@ -238,9 +253,15 @@ class GraphicsScene(ToolkitObject, Stylable):
             x_max.append(node.position.x + node.width)
             y_min.append(node.position.y)
             y_max.append(node.position.y + node.height)
+        if len(x_min) == 0:
+            return [0, 0, 800, 600]
+
         x = min(x_min)
         y = min(y_min)
         return [x, y, max(x_max) - x, max(y_max) - y]
+
+    def set_scene_rect(self, bbox):
+        self.proxy.update_scenerect(bbox)
 
     def set_focus(self):
         """ Set the keyboard input focus to this widget.
