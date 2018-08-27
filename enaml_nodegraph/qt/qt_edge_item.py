@@ -1,4 +1,5 @@
 import math
+import logging
 from atom.api import Typed, Int, Float, Unicode, Instance, Property, observe
 from enaml.qt import QtCore, QtGui, QtWidgets
 from enaml.qt.QtGui import QFont, QColor
@@ -13,6 +14,8 @@ from enaml_nodegraph.widgets.node_socket import SocketPosition
 
 from .qt_graphicsitem import QGraphicsPathItem, QtGraphicsItem
 
+log = logging.getLogger(__name__)
+
 
 class QEdgeItem(QGraphicsPathItem):
 
@@ -21,6 +24,7 @@ class QEdgeItem(QGraphicsPathItem):
         self.proxy = proxy
 
     def paint(self, painter, style_option, widget=None):
+
         lod = style_option.levelOfDetailFromTransform(painter.worldTransform())
 
         self.setPath(self.calcPath())
@@ -85,7 +89,8 @@ class QEdgeItem(QGraphicsPathItem):
         return self.shape().boundingRect()
 
     def contextMenuEvent(self, event):
-        self.proxy.on_context_menu(event)
+        if self.proxy is not None:
+            self.proxy.on_context_menu(event)
 
     # @todo: these are expected from toolkitobject - but are not valid for graphics items
     def setObjectName(self, name):
@@ -95,7 +100,7 @@ class QEdgeItem(QGraphicsPathItem):
         pass
 
     def deleteLater(self):
-        pass
+       log.debug("EdgeItem: deleteLater")
 
 
 class QtEdgeItem(QtGraphicsItem, ProxyEdgeItem):

@@ -73,6 +73,8 @@ class QtGraphicsItem(QtToolkitObject, ProxyGraphicsItem):
         """
         if self.widget is not None and self.widget.scene() is not None:
             self.widget.scene().removeItem(self.widget)
+            del self.widget
+            self.widget = None
         self._teardown_features()
         focus_registry.unregister(self.widget)
         super(QtGraphicsItem, self).destroy()

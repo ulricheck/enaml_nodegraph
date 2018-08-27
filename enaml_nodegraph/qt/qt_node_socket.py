@@ -1,3 +1,5 @@
+import logging
+
 from atom.api import Unicode, Int, Bool, Typed, Float, observe
 from enaml.qt import QtCore, QtGui, QtWidgets
 
@@ -9,6 +11,8 @@ from enaml.qt.q_resource_helpers import (
 
 from .qt_graphicsitem import QGraphicsItem, QtGraphicsItem
 from enaml_nodegraph.primitives import Point2D
+
+log = logging.getLogger(__name__)
 
 
 class QNodeSocket(QGraphicsItem):
@@ -37,7 +41,7 @@ class QNodeSocket(QGraphicsItem):
         pass
 
     def deleteLater(self):
-        pass
+        log.debug("NodeSocket: deleteLater")
 
 
 class QtNodeSocket(QtGraphicsItem, ProxyNodeSocket):

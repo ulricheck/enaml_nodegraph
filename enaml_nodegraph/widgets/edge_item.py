@@ -127,7 +127,8 @@ class EdgeItem(GraphicsItem):
         old_socket = change.get('oldvalue', None)
         if old_socket:
             old_socket.parent.unobserve('position', self.update_pos_source)
-            old_socket.edges.popitem(self, None)
+            if self in old_socket.edges:
+                old_socket.edges.remove(self)
         if new_socket:
             self.pos_source = new_socket.parent.position + new_socket.relative_position
             new_socket.edges.append(self)
@@ -138,7 +139,8 @@ class EdgeItem(GraphicsItem):
         old_socket = change.get('oldvalue', None)
         if old_socket:
             old_socket.parent.unobserve('position', self.update_pos_destination)
-            old_socket.edges.popitem(self, None)
+            if self in old_socket.edges:
+                old_socket.edges.remove(self)
         if new_socket:
             self.pos_destination = new_socket.parent.position + new_socket.relative_position
             new_socket.edges.append(self)

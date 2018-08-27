@@ -1,3 +1,5 @@
+import logging
+
 from atom.api import Typed, Int, Float, Bool, Unicode, Instance, Event, observe
 from enaml.qt import QtCore, QtGui, QtWidgets
 from enaml.qt.QtGui import QFont, QColor
@@ -12,6 +14,8 @@ from enaml_nodegraph.primitives import Point2D
 
 from .qt_graphicsitem import QGraphicsItem, QtGraphicsItem
 from .qt_node_content import QtNodeContent
+
+log = logging.getLogger(__name__)
 
 
 class QNodeItem(QGraphicsItem):
@@ -48,7 +52,7 @@ class QNodeItem(QGraphicsItem):
         pass
 
     def deleteLater(self):
-        pass
+        log.debug("NodeItem: deleteLater")
 
 
 class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
