@@ -104,8 +104,8 @@ class NodeItem(GraphicsItem):
     input_sockets_visible = Property(lambda self: [s for s in self.input_sockets if s.visible], cached=True)
     output_sockets_visible = Property(lambda self: [s for s in self.output_sockets if s.visible], cached=True)
 
-    input_sockets_dict = Dict(Str(), NodeSocket)
-    output_sockets_dict = Dict(Str(), NodeSocket)
+    input_sockets_dict = Property(lambda self: self._mk_input_dict(), cached=True)
+    output_sockets_dict = Property(lambda self: self._mk_output_dict(), cached=True)
 
     #: Cyclic notification guard. This a bitfield of multiple guards.
     _guard = Int(0)
@@ -140,10 +140,10 @@ class NodeItem(GraphicsItem):
         if isinstance(child, NodeSocket):
             if child.socket_type == SocketType.INPUT:
                 self.input_sockets.append(child)
-                self.input_sockets_dict[child.id] = child
+                self.get_member('input_sockets_dict').reset(self)
             elif child.socket_type == SocketType.OUTPUT:
                 self.output_sockets.append(child)
-                self.output_sockets_dict[child.id] = child
+                self.get_member('output_sockets_dict').reset(self)
 
     def child_removed(self, child):
         """ Reset the item cache when a child is removed """
@@ -153,10 +153,16 @@ class NodeItem(GraphicsItem):
         if isinstance(child, NodeSocket):
             if child.socket_type == SocketType.INPUT:
                 self.input_sockets.remove(child)
-                self.input_sockets_dict.pop(child.id)
+                self.get_member('input_sockets_dict').reset(self)
             elif child.socket_type == SocketType.OUTPUT:
                 self.output_sockets.remove(child)
-                self.output_sockets_dict.pop(child.id)
+                self.get_member('output_sockets_dict').reset(self)
+
+    def _mk_input_dict(self):
+        return {c.id: c for c in self.children if isinstance(c, NodeSocket) and c.socket_type == SocketType.INPUT}
+
+    def _mk_output_dict(self):
+        return {c.id: c for c in self.children if isinstance(c, NodeSocket) and c.socket_type == SocketType.OUTPUT}
 
     def activate_bottom_up(self):
         self.assign_socket_indices()
