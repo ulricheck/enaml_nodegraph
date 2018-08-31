@@ -1,3 +1,4 @@
+import logging
 from atom.api import (
     Atom, Int, Float, Unicode, Str, Typed, IntEnum, ForwardTyped, ForwardInstance, Event, observe
 )
@@ -8,6 +9,7 @@ from enaml.colors import ColorMember
 from .graphicsitem import GraphicsItem, ProxyGraphicsItem
 from enaml_nodegraph.primitives import Point2D
 
+log = logging.getLogger(__name__)
 
 def import_node_socket():
     from .node_socket import NodeSocket
@@ -102,9 +104,9 @@ class EdgeItem(GraphicsItem):
             self.scene.controller.edge_disconnect(self.id)
 
         if self.start_socket and self in self.start_socket.edges:
-            self.start_socket.edges.remove(self)
+            self.start_socket = None
         if self.end_socket and self in self.end_socket.edges:
-            self.end_socket.edges.remove(self)
+            self.end_socket = None
 
         super(EdgeItem, self).destroy()
 
@@ -126,13 +128,20 @@ class EdgeItem(GraphicsItem):
         new_socket = change['value']
         old_socket = change.get('oldvalue', None)
         if old_socket:
-            old_socket.parent.unobserve('position', self.update_pos_source)
+            if old_socket.parent is not None:
+                old_socket.parent.unobserve('position', self.update_pos_source)
+            else:
+                log.warning('try to disconnect socket without parent', old_socket)
             if self in old_socket.edges:
                 old_socket.edges.remove(self)
+
         if new_socket:
-            self.pos_source = new_socket.parent.position + new_socket.relative_position
+            if new_socket.parent is not None:
+                self.pos_source = new_socket.parent.position + new_socket.relative_position
+                new_socket.parent.observe('position', self.update_pos_source)
+            else:
+                log.warning('try to disconnect socket without parent', new_socket)
             new_socket.edges.append(self)
-            new_socket.parent.observe('position', self.update_pos_source)
 
     def _observe_end_socket(self, change):
         new_socket = change['value']
@@ -157,7 +166,6 @@ class EdgeItem(GraphicsItem):
         if self.end_socket is not None:
             node_position = self.end_socket.parent.position
             self.pos_destination = node_position + self.end_socket.relative_position
-
 
     def update_pos_source(self, change):
         node_position = change['value']

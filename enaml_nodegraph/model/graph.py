@@ -42,3 +42,31 @@ class Graph(GraphItem):
 
     def _mk_edge_dict(self):
         return {v.id: v for v in self.edges}
+
+    def add_node(self, node):
+        if node not in self.nodes:
+            self.nodes.append(node)
+            self.get_member("node_dict").reset(self)
+        else:
+            raise ValueError("Node already contained in graph")
+
+    def delete_node(self, node):
+        if node in self.nodes:
+            self.nodes.remove(node)
+            self.get_member("node_dict").reset(self)
+        else:
+            raise KeyError("Node not contained in graph")
+
+    def add_edge(self, edge):
+        if edge not in self.edges:
+            self.edges.append(edge)
+            self.get_member("edge_dict").reset(self)
+        else:
+            raise ValueError("Edge already contained in graph")
+
+    def delete_edge(self, edge):
+        if edge in self.edges:
+            self.edges.remove(edge)
+            self.get_member("edge_dict").reset(self)
+        else:
+            raise KeyError("Edge not contained in graph")

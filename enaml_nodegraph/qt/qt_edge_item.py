@@ -2,7 +2,7 @@ import math
 import logging
 from atom.api import Typed, Int, Float, Unicode, Instance, Property, observe
 from enaml.qt import QtCore, QtGui, QtWidgets
-from enaml.qt.QtGui import QFont, QColor
+from enaml.application import deferred_call
 
 from enaml.qt.q_resource_helpers import (
     get_cached_qcolor, get_cached_qfont, get_cached_qimage
@@ -24,6 +24,12 @@ class QEdgeItem(QGraphicsPathItem):
         self.proxy = proxy
 
     def paint(self, painter, style_option, widget=None):
+
+        if self.proxy.end_socket is None and self.proxy.start_socket is None:
+            log.warning("cleanup disconnected edge: %s" % self)
+            self.setVisible(False)
+            self.proxy.destroy()
+            return
 
         lod = style_option.levelOfDetailFromTransform(painter.worldTransform())
 
