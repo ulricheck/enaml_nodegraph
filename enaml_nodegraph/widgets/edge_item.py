@@ -140,20 +140,24 @@ class EdgeItem(GraphicsItem):
                 self.pos_source = new_socket.parent.position + new_socket.relative_position
                 new_socket.parent.observe('position', self.update_pos_source)
             else:
-                log.warning('try to disconnect socket without parent', new_socket)
+                log.warning('try to disconnect socket without parent: %s' % new_socket)
             new_socket.edges.append(self)
 
     def _observe_end_socket(self, change):
         new_socket = change['value']
         old_socket = change.get('oldvalue', None)
         if old_socket:
-            old_socket.parent.unobserve('position', self.update_pos_destination)
+            if old_socket.parent:
+                old_socket.parent.unobserve('position', self.update_pos_destination)
             if self in old_socket.edges:
                 old_socket.edges.remove(self)
         if new_socket:
-            self.pos_destination = new_socket.parent.position + new_socket.relative_position
+            if new_socket.parent:
+                self.pos_destination = new_socket.parent.position + new_socket.relative_position
+                new_socket.parent.observe('position', self.update_pos_destination)
+            else:
+                log.warning("connected to socket without parent: %s" % new_socket)
             new_socket.edges.append(self)
-            new_socket.parent.observe('position', self.update_pos_destination)
 
     #--------------------------------------------------------------------------
     # Protected API

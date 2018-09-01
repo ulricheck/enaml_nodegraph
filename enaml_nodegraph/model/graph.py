@@ -65,6 +65,8 @@ class Graph(GraphItem):
             raise ValueError("Edge already contained in graph")
 
     def delete_edge(self, edge):
+        edge.start_socket = None
+        edge.end_socket = None
         if edge in self.edges:
             self.edges.remove(edge)
             self.get_member("edge_dict").reset(self)
