@@ -6,8 +6,9 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #------------------------------------------------------------------------------
 from atom.api import (
-    Bool, IntEnum, Unicode, Coerced, Typed, ForwardTyped, Event, observe
+    Bool, Unicode, Coerced, Typed, ForwardTyped, Event, observe
 )
+from enum import IntEnum
 
 from enaml.core.declarative import d_, d_func
 

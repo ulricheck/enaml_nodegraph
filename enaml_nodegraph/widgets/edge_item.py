@@ -1,7 +1,8 @@
 import logging
 from atom.api import (
-    Atom, Int, Float, Unicode, Str, Typed, IntEnum, ForwardTyped, ForwardInstance, Event, observe
+    Atom, Int, Float, Unicode, Str, Typed, ForwardTyped, ForwardInstance, Event, observe
 )
+from enum import IntEnum
 
 from enaml.core.declarative import d_
 from enaml.colors import ColorMember

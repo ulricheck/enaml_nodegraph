@@ -1,6 +1,6 @@
 from atom.api import (Atom, List, Dict, Int, Str, ForwardTyped, Typed, ForwardInstance,
-                      ContainerList, Instance, Signal, observe, IntEnum)
-
+                      ContainerList, Instance, Signal, observe)
+from enum import IntEnum
 
 from .widgets.graphicsview import GraphicsView
 

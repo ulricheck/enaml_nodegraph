@@ -1,4 +1,5 @@
-from atom.api import Atom, List, Dict, Int, Str, ForwardTyped, Typed, ForwardInstance, ContainerList, Instance, observe, IntEnum
+from atom.api import Atom, List, Dict, Int, Str, ForwardTyped, Typed, ForwardInstance, ContainerList, Instance, observe
+from enum import IntEnum
 
 from .base import GraphItem
 from .edge import Edge

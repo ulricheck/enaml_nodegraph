@@ -1,6 +1,7 @@
 from atom.api import (
-    Int, Float, Bool, Unicode, Typed, Str, ContainerList, IntEnum, ForwardTyped, Property, Coerced, observe
+    Int, Float, Bool, Unicode, Typed, Str, ContainerList, ForwardTyped, Property, Coerced, observe
 )
+from enum import IntEnum
 
 from enaml.core.declarative import d_
 from enaml.colors import ColorMember

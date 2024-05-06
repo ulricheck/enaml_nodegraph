@@ -1,6 +1,7 @@
 from enaml.qt import QtCore, QtGui, QtWidgets
-from atom.api import Typed, Int, Event, IntEnum, Bool, Float, Int, Range
+from atom.api import Typed, Int, Event, Bool, Float, Int, Range
 from enaml.qt.qt_control import QtControl
+from enum import IntEnum
 
 from enaml_nodegraph.widgets.graphicsview import ProxyGraphicsView
 from enaml_nodegraph.widgets.graphicsscene import GraphicsScene
