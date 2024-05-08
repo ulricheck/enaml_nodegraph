@@ -6,6 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #------------------------------------------------------------------------------
 from atom.api import Typed, Int, Dict, Coerced
+from enaml.core.declarative import d_, d_func
 
 from enaml.styling import StyleCache
 from enaml.drag_drop import DropAction
@@ -41,7 +42,7 @@ class QtGraphicsScene(QtToolkitObject, ProxyGraphicsScene):
     #: A private copy of the declaration features. This ensures that
     #: feature cleanup will proceed correctly in the event that user
     #: code modifies the declaration features value at runtime.
-    _features = Coerced(Feature.Flags)
+    _features = Int(0)  # Coerced(Feature.Flags)
 
     #: Internal storage for the drag origin position.
     _drag_origin = Typed(QPoint)

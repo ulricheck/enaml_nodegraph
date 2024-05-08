@@ -2,8 +2,6 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../atom" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../enaml" vcs="Git" />
-    <mapping directory="$USER_HOME$/mysandbox/explore/pyqt-node-editor-tutorials" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../enaml_opengl" vcs="Git" />
   </component>
 </project>

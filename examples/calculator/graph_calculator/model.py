@@ -2,7 +2,7 @@ import logging
 import math
 import networkx as nx
 
-from atom.api import (Atom, Value, Bool, Int, Float, Str, Unicode, Enum, List, Property, Event, ForwardInstance, observe)
+from atom.api import (Atom, Value, Bool, Int, Float, Str, Str, Enum, List, Property, Event, ForwardInstance, observe)
 
 from enaml_nodegraph import model
 
@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 TYPE_MAP = {
     'int': Int,
     'float': Float,
-    'text': Unicode,
+    'text': Str,
 }
 
 
@@ -73,7 +73,7 @@ class InputSocket(model.Socket):
 
 class AttrSpec(Atom):
     name = Str()
-    display_name = Unicode()
+    display_name = Str()
     data_type = Str()
     default = Value()
     attr_type = Enum('property', 'input', 'output')
@@ -371,7 +371,7 @@ class FloatIntegerConverter(model.Node):
 
 class IntegerTextConverter(model.Node):
     in1 = Int()
-    result = Unicode()
+    result = Str()
 
     def _default_inputs(self):
         return [InputSocket(name="in1", degree=1, data_type="int")]
@@ -389,7 +389,7 @@ class IntegerTextConverter(model.Node):
 
 class FloatTextConverter(model.Node):
     in1 = Float()
-    result = Unicode()
+    result = Str()
 
     def _default_inputs(self):
         return [InputSocket(name="in1", degree=1, data_type="float")]

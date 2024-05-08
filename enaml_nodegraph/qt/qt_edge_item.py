@@ -1,6 +1,6 @@
 import math
 import logging
-from atom.api import Typed, Int, Float, Unicode, Instance, Property, observe
+from atom.api import Typed, Int, Float, Str, Instance, Property, observe
 from enaml.qt import QtCore, QtGui, QtWidgets
 from enaml.application import deferred_call
 
@@ -113,7 +113,7 @@ class QtEdgeItem(QtGraphicsItem, ProxyEdgeItem):
     """ A Qt implementation of an Enaml EdgeItem.
 
     """
-    name = Unicode()
+    name = Str()
 
     line_width = Float(2.0)
     edge_roundness = Int(100)

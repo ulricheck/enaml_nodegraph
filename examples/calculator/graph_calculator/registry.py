@@ -1,9 +1,9 @@
-from atom.api import (Atom, AtomMeta, Str, Unicode, ContainerList, Dict, Typed)
+from atom.api import (Atom, AtomMeta, Str, Str, ContainerList, Dict, Typed)
 
 
 class TypeElement(Atom):
     id = Str()
-    name = Unicode()
+    name = Str()
     widget_class = Typed(AtomMeta)
     model_class = Typed(AtomMeta)
 

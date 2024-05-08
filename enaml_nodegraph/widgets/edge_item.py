@@ -1,6 +1,6 @@
 import logging
 from atom.api import (
-    Atom, Int, Float, Unicode, Str, Typed, ForwardTyped, ForwardInstance, Event, observe
+    Atom, Int, Float, Str, Str, Typed, ForwardTyped, ForwardInstance, Event, observe
 )
 from enum import IntEnum
 
@@ -54,7 +54,7 @@ class EdgeItem(GraphicsItem):
     """
 
     id = d_(Str())
-    name = d_(Unicode())
+    name = d_(Str())
 
     edge_type = d_(Typed(EdgeType))
     line_width = d_(Float(2.0))

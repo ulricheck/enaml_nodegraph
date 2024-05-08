@@ -1,4 +1,4 @@
-from atom.api import Unicode, Property, Str, ContainerList, ForwardTyped
+from atom.api import Str, Property, Str, ContainerList, ForwardTyped
 
 from .socket import Socket, SocketType
 from .base import GraphItem
@@ -11,7 +11,7 @@ def import_graph_type():
 
 class Node(GraphItem):
     id = Str()
-    name = Unicode()
+    name = Str()
 
     graph = ForwardTyped(import_graph_type)
 

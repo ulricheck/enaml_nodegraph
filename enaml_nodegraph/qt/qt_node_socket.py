@@ -1,6 +1,6 @@
 import logging
 
-from atom.api import Unicode, Int, Bool, Typed, Float, observe
+from atom.api import Str, Int, Bool, Typed, Float, observe
 from enaml.qt import QtCore, QtGui, QtWidgets
 
 from enaml_nodegraph.widgets.node_socket import ProxyNodeSocket, SocketPosition, SocketType
@@ -48,7 +48,7 @@ class QtNodeSocket(QtGraphicsItem, ProxyNodeSocket):
     """ A Qt implementation of an Enaml NodeSocket.
 
     """
-    name = Unicode()
+    name = Str()
     index = Int(0)
     socket_type = Typed(SocketType)
     socket_position = Typed(SocketPosition)
@@ -134,7 +134,7 @@ class QtNodeSocket(QtGraphicsItem, ProxyNodeSocket):
         # painting circle
         painter.setBrush(self.color_background)
         painter.setPen(self.pen_outline)
-        painter.drawEllipse(-self.radius, -self.radius, 2 * self.radius, 2 * self.radius)
+        painter.drawEllipse(QtCore.QPointF(-self.radius, -self.radius), 2 * self.radius, 2 * self.radius)
 
         if self.show_label:
             painter.setFont(self.font_label)

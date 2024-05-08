@@ -1,5 +1,6 @@
 import logging
-from atom.api import Str, ForwardInstance, Typed, IntEnum
+from atom.api import Str, ForwardInstance, Typed
+from enum import IntEnum
 
 from .base import GraphItem
 

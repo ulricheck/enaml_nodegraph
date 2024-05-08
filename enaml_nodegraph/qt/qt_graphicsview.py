@@ -353,7 +353,7 @@ class QtGraphicsView(QtControl, ProxyGraphicsView):
         """ Initialize the underlying widget.
         """
         super(QtGraphicsView, self).init_widget()
-        self.widget.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.HighQualityAntialiasing |
+        self.widget.setRenderHints(QtGui.QPainter.Antialiasing  |
                                          QtGui.QPainter.TextAntialiasing | QtGui.QPainter.SmoothPixmapTransform)
 
         self.widget.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)

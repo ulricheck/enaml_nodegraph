@@ -1,5 +1,5 @@
 from atom.api import (
-    Int, Float, Bool, Unicode, Typed, Str, ContainerList, ForwardTyped, Property, Coerced, observe
+    Int, Float, Bool, Str, Typed, Str, ContainerList, ForwardTyped, Property, Coerced, observe
 )
 from enum import IntEnum
 
@@ -69,7 +69,7 @@ class NodeSocket(GraphicsItem):
     """
 
     id = d_(Str())
-    name = d_(Unicode())
+    name = d_(Str())
     index = d_(Int(0))
     socket_type = d_(Typed(SocketType))
     socket_position = d_(Typed(SocketPosition))

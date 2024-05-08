@@ -1,4 +1,4 @@
-from atom.api import Atom, Bool, Int, Float, Str, Unicode, List, Typed, observe
+from atom.api import Atom, Bool, Int, Float, Str, Str, List, Typed, observe
 
 from enaml.core.api import Looper, Include
 from enaml.widgets.api import (Container, Field, SpinBox, ObjectCombo, Slider,

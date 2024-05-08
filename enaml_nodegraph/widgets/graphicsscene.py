@@ -6,7 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #------------------------------------------------------------------------------
 from atom.api import (
-    Bool, Int, Unicode, Coerced, Property, Typed, ForwardTyped, ForwardInstance, Dict, observe
+    Bool, Int, Str, Coerced, Property, Typed, ForwardTyped, ForwardInstance, Dict, observe
 )
 from enum import IntEnum
 
@@ -104,10 +104,10 @@ class GraphicsScene(ToolkitObject, Stylable):
     minimum_render_size = d_(Int(0))
 
     #: The tool tip to show when the user hovers over the widget.
-    tool_tip = d_(Unicode())
+    tool_tip = d_(Str())
 
     #: The status tip to show when the user hovers over the widget.
-    status_tip = d_(Unicode())
+    status_tip = d_(Str())
 
     def _get_items(self):
         return [c for c in self.children if isinstance(c, GraphicsItem)]
@@ -118,15 +118,15 @@ class GraphicsScene(ToolkitObject, Stylable):
     #: Set the extra features to enable for this widget. This value must
     #: be provided when the widget is instantiated. Runtime changes to
     #: this value are ignored.
-    features = d_(Coerced(Feature.Flags))
+    features = d_(Int(0))  # d_(Coerced(Feature.Flags))
 
-    guard = d_(Coerced(SceneGuard.Flags))
+    guard = d_(Int(0))  # d_(Coerced(SceneGuard.Flags))
 
     #: Nodegraph Controller
     controller = d_(ForwardInstance(import_graph_controller_class))
 
-    nodes = Dict(Unicode(), NodeItem)
-    edges = Dict(Unicode(), EdgeItem)
+    nodes = Dict(Str(), NodeItem)
+    edges = Dict(Str(), EdgeItem)
 
     #: private dict to generate consecutive ids for item types
     _item_id_generator = Dict()

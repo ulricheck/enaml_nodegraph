@@ -3,7 +3,7 @@ import os
 import networkx as nx
 import json
 
-from atom.api import (Bool, List, Unicode, Typed, Instance, Event, observe)
+from atom.api import (Bool, List, Str, Typed, Instance, Event, observe)
 
 from enaml_nodegraph.controller import GraphControllerBase
 from enaml_nodegraph.widgets.node_item import NodeItem
@@ -20,8 +20,8 @@ class CalculatorGraphController(GraphControllerBase):
     is_active = Bool(False)
     is_dirty = Bool(False)
 
-    current_path = Unicode()
-    filename = Unicode()
+    current_path = Str()
+    filename = Str()
 
     registry = Typed(TypeRegistry)
     graph = Instance(ExecutableGraph)

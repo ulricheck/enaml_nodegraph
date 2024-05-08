@@ -1,7 +1,7 @@
 import math
 
 from atom.api import (
-    Atom, Bool, Int, Float, Unicode, Str, Typed, Dict, List, Instance, Event, Property, ForwardTyped, observe
+    Atom, Bool, Int, Float, Str, Str, Typed, Dict, List, Instance, Event, Property, ForwardTyped, observe
 )
 
 from enaml.core.declarative import d_
@@ -68,7 +68,7 @@ class NodeItem(GraphicsItem):
     """
 
     id = d_(Str())
-    name = d_(Unicode())
+    name = d_(Str())
 
     width = d_(Int(180))
     height = d_(Int())

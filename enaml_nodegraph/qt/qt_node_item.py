@@ -1,6 +1,6 @@
 import logging
 
-from atom.api import Typed, Int, Float, Bool, Unicode, Instance, Event, observe
+from atom.api import Typed, Int, Float, Bool, Str, Instance, Event, observe
 from enaml.qt import QtCore, QtGui, QtWidgets
 from enaml.qt.QtGui import QFont, QColor
 
@@ -60,7 +60,7 @@ class QtNodeItem(QtGraphicsItem, ProxyNodeItem):
 
     """
 
-    id = Unicode()
+    id = Str()
 
     width = Int(180)
     height = Int(240)

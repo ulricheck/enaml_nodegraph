@@ -6,7 +6,7 @@
 # The full license is in the file COPYING.txt, distributed with this software.
 #------------------------------------------------------------------------------
 from atom.api import (
-    Bool, Unicode, Coerced, Typed, ForwardTyped, Event, observe
+    Bool, Str, Coerced, Int, Typed, ForwardTyped, Event, observe
 )
 from enum import IntEnum
 
@@ -83,10 +83,10 @@ class GraphicsItem(ToolkitObject):
     visible = d_(Bool(True))
 
     #: The tool tip to show when the user hovers over the widget.
-    tool_tip = d_(Unicode())
+    tool_tip = d_(Str())
 
     #: The status tip to show when the user hovers over the widget.
-    status_tip = d_(Unicode())
+    status_tip = d_(Str())
 
     #: Request a scene redraw
     request_update = Event()
@@ -97,7 +97,7 @@ class GraphicsItem(ToolkitObject):
     #: Set the extra features to enable for this widget. This value must
     #: be provided when the widget is instantiated. Runtime changes to
     #: this value are ignored.
-    features = d_(Coerced(Feature.Flags))
+    features = d_(Int(0))  # d_(Coerced(Feature.Flags))
 
     #: A reference to the ProxyWidget object.
     proxy = Typed(ProxyGraphicsItem)

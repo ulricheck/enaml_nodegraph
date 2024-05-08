@@ -1,18 +1,18 @@
 import logging
 
-from atom.api import (Atom, Bool, Int, Float, Str, Unicode, Enum,
+from atom.api import (Atom, Bool, Int, Float, Str, Str, Enum,
                       List, Dict, ContainerList, Typed, Instance)
 
 log = logging.getLogger(__name__)
 
 
 def serialize(archive, member, value):
-    if isinstance(member, (Bool, Int, Float, Str, Unicode)):
+    if isinstance(member, (Bool, Int, Float, Str, Str)):
         archive[member.name] = value
-    # @todo only correct for simple types (Int, Bool, Float, Str, Unicode)
+    # @todo only correct for simple types (Int, Bool, Float, Str, Str)
     elif isinstance(member, (List, ContainerList)):
         archive[member.name] = value
-    # @todo only correct for simple types (Int, Bool, Float, Str, Unicode)
+    # @todo only correct for simple types (Int, Bool, Float, Str, Str)
     elif isinstance(member, Dict):
         archive[member.name] = value
     elif isinstance(member, Enum):
@@ -25,12 +25,12 @@ def serialize(archive, member, value):
 
 def deserialize(archive, member):
 
-    if isinstance(member, (Bool, Int, Float, Str, Unicode)):
+    if isinstance(member, (Bool, Int, Float, Str, Str)):
         return archive[member.name]
-    # @todo only correct for simple types (Int, Bool, Float, Str, Unicode)
+    # @todo only correct for simple types (Int, Bool, Float, Str, Str)
     elif isinstance(member, (List, ContainerList)):
         return archive[member.name]
-    # @todo only correct for simple types (Int, Bool, Float, Str, Unicode)
+    # @todo only correct for simple types (Int, Bool, Float, Str, Str)
     elif isinstance(member, Dict):
         return archive[member.name]
     elif isinstance(member, Enum):

@@ -1,4 +1,4 @@
-from atom.api import Atom, Bool, Enum, Event, Float, Int, Str, Unicode
+from atom.api import Atom, Bool, Enum, Event, Float, Int, Str, Str
 
 from enaml.core.api import DynamicTemplate
 from enaml.stdlib.fields import FloatField
@@ -40,8 +40,8 @@ template FormControl(Names, MemberType: Int):
         maximum = 10000
 
 
-template FormControl(Names, MemberType: Unicode):
-    """ A form control template specialization for Unicode members.
+template FormControl(Names, MemberType: Str):
+    """ A form control template specialization for Str members.
 
     This control uses a Field to represent the value.
 
