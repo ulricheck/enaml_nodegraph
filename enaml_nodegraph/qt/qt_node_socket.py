@@ -134,7 +134,7 @@ class QtNodeSocket(QtGraphicsItem, ProxyNodeSocket):
         # painting circle
         painter.setBrush(self.color_background)
         painter.setPen(self.pen_outline)
-        painter.drawEllipse(QtCore.QPointF(-self.radius, -self.radius), 2 * self.radius, 2 * self.radius)
+        painter.drawEllipse(QtCore.QPointF(0., 0.), self.radius, self.radius)
 
         if self.show_label:
             painter.setFont(self.font_label)
