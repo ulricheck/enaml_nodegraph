@@ -120,7 +120,7 @@ class QtNodeSocket(QtGraphicsItem, ProxyNodeSocket):
             self.pen_label = QtGui.QPen(self.color_label)
             self.pen_label.setWidthF(1)
 
-    def _observe_position(self, change):
+    def _observe_relative_position(self, change):
         if self.widget is not None:
             self.widget.setPos(QtCore.QPointF(self.relative_position.x, self.relative_position.y))
 
